@@ -8,7 +8,7 @@
 
 typedef struct {
     char opcode[MAX_LENGTH];
-    char *operands; // Change to pointer
+    char *operands; 
 } Instruction;
 
 int main() {

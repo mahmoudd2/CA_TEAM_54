@@ -1,16 +1,15 @@
-.global <instruction_name>
+; assembly_code.txt
+; Example assembly code for the Fillet-O-Neumann processor
 
-<instruction_name>:
-    ; Get operands from registers or memory based on calling convention (C calling conventions vary)
-    ; Example (assuming operands are passed in registers):
-    MOV R1, [esp + 4]  ; Assuming first operand is in 4th byte of stack frame
-    MOV R2, [esp + 8]  ; Assuming second operand is in 8th byte of stack frame
-
-    ; Perform the instruction operation
-    ADD R3, R1, R2  ; Example for ADD instruction
-
-    ; Store the result in the destination register or memory
-    ; Example (assuming result goes to register R0):
-    MOV [esp], R3  ; Assuming result is stored in the first byte of the stack frame
-
-    RET  ; Return control to the C program
+ADD R1 R2 R3
+SUB R1 R2 R3
+MUL R1 R2 R3
+MOVI R1 IMMEDIATE_VALUE
+JEQ R1 R2 IMMEDIATE
+AND R1 R2 R3
+XORI R1 R2 IMMEDIATE
+JMP ADDRESS
+LSL R1 R2 SHAMT
+LSR R1 R2 SHAMT
+MOVR R1 R2
+MOVM R1 R2 IMMEDIATE

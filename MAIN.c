@@ -22,7 +22,7 @@ int main() {
     int instruction_address = 0;
     while (fscanf(file, "%d", &memory[instruction_address].opcode) != EOF) {
         // Parse remaining operands based on instruction format
-        for (int i = 0; i < /* number of operands */; i++) {
+        for (int i = 0; i < 12 ; i++) {
             fscanf(file, "%d", &memory[instruction_address].operands[i]);
         }
         instruction_address++;

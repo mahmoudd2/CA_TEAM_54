@@ -7,7 +7,7 @@
 // Define instruction struct based on your instruction formats (opcode, operands)
 typedef struct Instruction {
     int opcode;
-    int operands[/* number of operands */];
+    int operands[1];
 } Instruction;
 
 Instruction memory[MEMORY_SIZE];
@@ -22,16 +22,22 @@ int main() {
     int instruction_address = 0;
     while (fscanf(file, "%d", &memory[instruction_address].opcode) != EOF) {
         // Parse remaining operands based on instruction format
-        for (int i = 0; i < 12 ; i++) {
+        for (int i = 0; i < 1 ; i++) {
             fscanf(file, "%d", &memory[instruction_address].operands[i]);
         }
         instruction_address++;
     }
 
     fclose(file);
-
-    // Rest of the program can call assembly functions for execution
-    // You'll pass the parsed instructions stored in memory to the assembly functions
+    for (int i = 0; i < instruction_address; i++) {
+        printf("Instruction %d:\n", i);
+        printf("  Opcode: %d\n", memory[i].opcode);
+        printf("  Operands: ");
+        for (int j = 0; j < 1; j++) {
+            printf("%d ", memory[i].operands[j]);
+        }
+        printf("\n");
+    }
 
     return 0;
 }

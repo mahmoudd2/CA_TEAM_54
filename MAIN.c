@@ -13,7 +13,7 @@ typedef struct Instruction {
 Instruction memory[MEMORY_SIZE];
 
 int main() {
-    FILE *file = fopen("instructions.txt", "r");
+    FILE *file = fopen("CA.txt", "r");
     if (file == NULL) {
         printf("Error opening instruction file.\n");
         return 1;

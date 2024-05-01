@@ -52,7 +52,7 @@ char *int_to_binary(int num, int num_bits) {
     }
 
     // Ensure the number is within the supported range
-    if (num < 0 || num >= (1 << num_bits)) {
+    if (num < 0 || num >= (1 << num_bits)) { 
         fprintf(stderr, "Number out of range for %d bits\n", num_bits);
         exit(1);
     }
@@ -61,7 +61,7 @@ char *int_to_binary(int num, int num_bits) {
     for (int i = num_bits - 1; i >= 0; i--) {
         int bit = (num >> i) & 1; // Extract each bit
         binary[num_bits - 1 - i] = bit ? '1' : '0'; // Store '1' or '0'
-    }
+    }        
     binary[num_bits] = '\0'; // Null-terminate the string
 
     return binary;
@@ -82,11 +82,9 @@ char *Type_opcode (const char opcode [])
     }
 }
 
-char *concatenate_J_Format(const char *opcode, const char *address, const char *binary_opcode) {
-    // Determine the total length needed for the concatenated string
-    
+char *concatenate_J_Format(const char *address, const char *binary_opcode) {
     // Allocate memory for the concatenated string
-    char *concatenated = malloc(33);
+    char *concatenated = malloc(33); // 32 + 1 el (+1) 3shan fe null terminator fel akher
     if (concatenated == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
         exit(1);
@@ -99,12 +97,12 @@ char *concatenate_J_Format(const char *opcode, const char *address, const char *
     strcat(concatenated, address);
     
     // Free memory for the binary address
-   // free(address);
+    // free(address);
     
     return concatenated;
 }
 
-char *concatenate_R_Format(const char *opcode, const char *R1, const char *R2, const char*R3, const char *SHAMT, const char* binary_opcode)
+char *concatenate_R_Format(const char *R1, const char *R2, const char*R3, const char *SHAMT, const char* binary_opcode)
 {
     char *concatenated =malloc(33);
     if(concatenated == NULL)
@@ -216,16 +214,16 @@ int main()
         if (strcmp(type, "J") == 0) {
             char *address = Words_array[1];
             int num = atoi(address);
-            address = int_to_binary(num,28);
+            address = int_to_binary(num,28); 
 
             // Call the function to concatenate
-            binary_opcode = concatenate_J_Format(Words_array[0], address, binary_opcode);
+            binary_opcode = concatenate_J_Format(address, binary_opcode);
 
             printf("Final Binary Code Of The %d Instruction: %s\n\n", i + 1, binary_opcode);
         }
         else if(strcmp(type, "R") == 0)
         {
-            char *First_reg = Words_array[1]+1; // +1 3shan n skip el char R w ngeb el rkam el b3do
+            char *First_reg = Words_array[1]+1; // +1 3shan n skip el char R w ngeb el rkam el b3do 
             char *Sec_reg = Words_array[2]+1;
             int num1 = atoi(First_reg);
             int num2 = atoi(Sec_reg);
@@ -248,7 +246,7 @@ int main()
                 Third_reg = int_to_binary(num3,5);
                 SHAMT = "0000000000000";
             }
-            binary_opcode = concatenate_R_Format(Words_array[0], First_reg, Sec_reg, Third_reg, SHAMT, binary_opcode);
+            binary_opcode = concatenate_R_Format(First_reg, Sec_reg, Third_reg, SHAMT, binary_opcode);
 
             printf("Final Binary Code Of The %d Instruction: %s\n\n", i + 1, binary_opcode);
 

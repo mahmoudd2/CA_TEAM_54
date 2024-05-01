@@ -107,6 +107,29 @@ char *Type_opcode (const char opcode [])
     }
 }
 
+char *concatenate_binary(const char *opcode, const char *address, const char *binary_opcode) {
+    // Determine the total length needed for the concatenated string
+    int total_length = strlen(binary_opcode) + strlen(address) + 1; // +1 for the null terminator
+    
+    // Allocate memory for the concatenated string
+    char *concatenated = malloc(total_length);
+    if (concatenated == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
+    }
+    
+    // Copy the original binary_opcode to concatenated
+    strcpy(concatenated, binary_opcode);
+    
+    // Concatenate the binary address to concatenated
+    strcat(concatenated, address);
+    
+    // Free memory for the binary address
+    free(address);
+    
+    return concatenated;
+}
+
 
 int main() 
 {
@@ -199,20 +222,18 @@ int main()
             printf("This opcode have the %s-Format\n\n",type);
 
 
-        if (type == "J")
-        {
-            char result[100]; // Make sure result has enough space to hold the concatenated string
+        if (strcmp(type, "J") == 0) {
             char *address = Words_array[1];
             int num = atoi(address);
             address = int_to_binary_28bits(num);
-            strcpy(result,binary_opcode);
-            strcat(result,address);
-            printf("Binary Opcode of the %d instruction: %s\n", i+1, binary_opcode);
-        }
-        else{
+
+            // Call the function to concatenate
+            binary_opcode = concatenate_binary(Words_array[0], address, binary_opcode);
+
+            printf("Binary Opcode of the %d instruction: %s\n", i + 1, binary_opcode);
+        } else {
             printf("\nNOT J");
         }
-
         // Free memory for tokens
         for (int j = 0; j < current_pos; j++) {
             free(Words_array[j]);

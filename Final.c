@@ -43,6 +43,31 @@ char *opcode_to_binary(const char opcode []) {
     }
 }
 
+char *int_to_binary(int num) {
+    // Ensure num is within the range [0, 31]
+    if (num < 0 || num > 31) {
+        fprintf(stderr, "Number must be in the range [0, 31]\n");
+        exit(1);
+    }
+
+    // Allocate memory for the binary string
+    char *binary_str = malloc(6); // 5 bits + 1 for the null terminator
+    if (binary_str == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
+    }
+
+    // Convert the integer to a binary string
+    for (int i = 4; i >= 0; i--) {
+        binary_str[4 - i] = (num & (1 << i)) ? '1' : '0';
+    }
+
+    // Add the null terminator
+    binary_str[5] = '\0';
+
+    return binary_str;
+}
+
 char *Type_opcode (const char opcode [])
 {
     if (strcmp(opcode, "0000") == 0 || strcmp(opcode, "0001") == 0 ||

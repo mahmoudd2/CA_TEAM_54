@@ -95,9 +95,9 @@ int main()
     }
 
 
-    for (int i = 0; i < 1; i++)
+    for (int i = 0; i < 13; i++)
     {
-        char inst_binary[32]; // string for each instruction in binary
+        char *binary_opcode; // string for each instruction in binary
         int inst_length = strlen(instructions[i]);
         char *Words_array[inst_length]; // array to store tokens
         int current_pos = 0;
@@ -127,6 +127,9 @@ int main()
         {
             printf("%d token of instruction %d: %s\n",j, i + 1,Words_array[j]);
         }
+            
+            binary_opcode = opcode_to_binary(Words_array[0]);
+            printf("Binary Opcode of the %d instruction: %s\n\n", i+1, binary_opcode);
 
         // Free memory for tokens
         for (int j = 0; j < current_pos; j++) {

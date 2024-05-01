@@ -84,10 +84,9 @@ char *Type_opcode (const char opcode [])
 
 char *concatenate_J_Format(const char *opcode, const char *address, const char *binary_opcode) {
     // Determine the total length needed for the concatenated string
-    int total_length = strlen(binary_opcode) + strlen(address) + 1; // +1 for the null terminator
     
     // Allocate memory for the concatenated string
-    char *concatenated = malloc(total_length);
+    char *concatenated = malloc(33);
     if (concatenated == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
         exit(1);
@@ -100,11 +99,28 @@ char *concatenate_J_Format(const char *opcode, const char *address, const char *
     strcat(concatenated, address);
     
     // Free memory for the binary address
-    free(address);
+   // free(address);
     
     return concatenated;
 }
 
+char *concatenate_R_Format(const char *opcode, const char *R1, const char *R2, const char*R3, const char *SHAMT, const char* binary_opcode)
+{
+    char *concatenated =malloc(33);
+    if(concatenated == NULL)
+    {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
+    }
+
+    strcpy(concatenated,binary_opcode);
+
+    strcat(concatenated,R1);
+    strcat(concatenated,R2);
+    strcat(concatenated,R3);
+    strcat(concatenated,SHAMT);
+    return concatenated;
+}
 
 int main() 
 {
@@ -213,20 +229,28 @@ int main()
             char *Sec_reg = Words_array[2]+1;
             int num1 = atoi(First_reg);
             int num2 = atoi(Sec_reg);
-            if (strcmp (Words_array[0], "LSL") == 0 || strcmp (Words_array[0], "LSR") == 0)
-            {
-                char *R3 = "00000";
-                char *SHAMT = "";
-
-            }
-
-            char *Third_reg = Words_array[3]+1;
-
-            int num3 = atoi(Third_reg);
-
             First_reg = int_to_binary(num1,5);
             Sec_reg = int_to_binary(num2,5);
-            Third_reg = int_to_binary(num3,5);
+            char *Third_reg;
+            char *SHAMT;
+            if (strcmp (Words_array[0], "LSL") == 0 || strcmp (Words_array[0], "LSR") == 0)
+            {
+                Third_reg = "00000";
+                SHAMT = Words_array[3];
+                int num3 = atoi(SHAMT);
+                SHAMT = int_to_binary(num3,13);            
+
+            }
+            else
+            {
+                Third_reg = Words_array[3]+1;
+                int num3 = atoi(Third_reg);
+                Third_reg = int_to_binary(num3,5);
+                SHAMT = "0000000000000";
+            }
+            binary_opcode = concatenate_R_Format(Words_array[0], First_reg, Sec_reg, Third_reg, SHAMT, binary_opcode);
+
+            printf("Final Binary Code Of The %d Instruction: %s\n\n", i + 1, binary_opcode);
 
         }
         // Free memory for tokens

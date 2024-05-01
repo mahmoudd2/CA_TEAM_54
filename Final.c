@@ -43,7 +43,7 @@ char *opcode_to_binary(const char opcode []) {
     }
 }
 
-char *int_to_binary(int num) {
+char *int_to_binary_5bits(int num) {
     // Ensure num is within the range [0, 31]
     if (num < 0 || num > 31) {
         fprintf(stderr, "Number must be in the range [0, 31]\n");
@@ -66,6 +66,30 @@ char *int_to_binary(int num) {
     binary_str[5] = '\0';
 
     return binary_str;
+}
+
+char *int_to_binary_28bits(int num) {
+    // Allocate memory for the binary string
+    char *binary = (char *)malloc(29 * sizeof(char)); // 28 bits + '\0'
+    if (binary == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
+    }
+
+    // Ensure the number is within the supported range
+    if (num < 0 || num >= (1 << 28)) {
+        fprintf(stderr, "Number out of range\n");
+        exit(1);
+    }
+
+    // Convert the integer to binary
+    for (int i = 27; i >= 0; i--) {
+        int bit = (num >> i) & 1; // Extract each bit
+        binary[27 - i] = bit ? '1' : '0'; // Store '1' or '0'
+    }
+    binary[28] = '\0'; // Null-terminate the string
+
+    return binary;
 }
 
 char *Type_opcode (const char opcode [])
@@ -135,7 +159,7 @@ int main()
     }
 
 
-    for (int i = 0; i < 13; i++)
+    for (int i = 7; i < 8; i++)
     {
         char *binary_opcode; // string for each instruction in binary
         char *type;
@@ -173,6 +197,22 @@ int main()
             printf("Binary Opcode of the %d instruction: %s\n", i+1, binary_opcode);
             type = Type_opcode(binary_opcode);
             printf("This opcode have the %s-Format\n\n",type);
+
+
+        if (type == "J")
+        {
+            char result[100]; // Make sure result has enough space to hold the concatenated string
+            char *address = Words_array[1];
+            int num = atoi(address);
+            address = int_to_binary_28bits(num);
+            strcpy(result,binary_opcode);
+            strcat(result,address);
+            printf("Binary Opcode of the %d instruction: %s\n", i+1, binary_opcode);
+        }
+        else{
+            printf("\nNOT J");
+        }
+
         // Free memory for tokens
         for (int j = 0; j < current_pos; j++) {
             free(Words_array[j]);

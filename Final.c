@@ -43,6 +43,21 @@ char *opcode_to_binary(const char opcode []) {
     }
 }
 
+char *Type_opcode (const char opcode [])
+{
+    if (strcmp(opcode, "0000") == 0 || strcmp(opcode, "0001") == 0 ||
+        strcmp(opcode, "0010") == 0 || strcmp(opcode, "0101") == 0 ||
+        strcmp(opcode, "1000") == 0 || strcmp(opcode, "1001") == 0) {
+        return "R";
+    } else if (strcmp(opcode, "0011") == 0 || strcmp(opcode, "0100") == 0 ||
+               strcmp(opcode, "0110") == 0 || strcmp(opcode, "1010") == 0 ||
+               strcmp(opcode, "1011") == 0)  {
+        return "I";
+    } else if (strcmp(opcode, "0111") == 0) {
+        return "J";
+    }
+}
+
 
 int main() 
 {
@@ -98,6 +113,7 @@ int main()
     for (int i = 0; i < 13; i++)
     {
         char *binary_opcode; // string for each instruction in binary
+        char *type;
         int inst_length = strlen(instructions[i]);
         char *Words_array[inst_length]; // array to store tokens
         int current_pos = 0;
@@ -125,12 +141,13 @@ int main()
         // Print the first token
         for(int j = 0; j < current_pos; j++)
         {
-            printf("%d token of instruction %d: %s\n",j, i + 1,Words_array[j]);
+            printf("Token %d of instruction %d: %s\n",j+1, i + 1,Words_array[j]);
         }
             
             binary_opcode = opcode_to_binary(Words_array[0]);
-            printf("Binary Opcode of the %d instruction: %s\n\n", i+1, binary_opcode);
-
+            printf("Binary Opcode of the %d instruction: %s\n", i+1, binary_opcode);
+            type = Type_opcode(binary_opcode);
+            printf("This opcode have the %s-Format\n\n",type);
         // Free memory for tokens
         for (int j = 0; j < current_pos; j++) {
             free(Words_array[j]);
@@ -139,4 +156,5 @@ int main()
 
 
     return 0;
+    
 }

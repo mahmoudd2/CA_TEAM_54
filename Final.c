@@ -43,51 +43,26 @@ char *opcode_to_binary(const char opcode []) {
     }
 }
 
-char *int_to_binary_5bits(int num) {
-    // Ensure num is within the range [0, 31]
-    if (num < 0 || num > 31) {
-        fprintf(stderr, "Number must be in the range [0, 31]\n");
-        exit(1);
-    }
-
+char *int_to_binary(int num, int num_bits) {
     // Allocate memory for the binary string
-    char *binary_str = malloc(6); // 5 bits + 1 for the null terminator
-    if (binary_str == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
-        exit(1);
-    }
-
-    // Convert the integer to a binary string
-    for (int i = 4; i >= 0; i--) {
-        binary_str[4 - i] = (num & (1 << i)) ? '1' : '0';
-    }
-
-    // Add the null terminator
-    binary_str[5] = '\0';
-
-    return binary_str;
-}
-
-char *int_to_binary_28bits(int num) {
-    // Allocate memory for the binary string
-    char *binary = (char *)malloc(29 * sizeof(char)); // 28 bits + '\0'
+    char *binary = (char *)malloc((num_bits + 1) * sizeof(char)); // +1 for the null terminator
     if (binary == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
         exit(1);
     }
 
     // Ensure the number is within the supported range
-    if (num < 0 || num >= (1 << 28)) {
-        fprintf(stderr, "Number out of range\n");
+    if (num < 0 || num >= (1 << num_bits)) {
+        fprintf(stderr, "Number out of range for %d bits\n", num_bits);
         exit(1);
     }
 
     // Convert the integer to binary
-    for (int i = 27; i >= 0; i--) {
+    for (int i = num_bits - 1; i >= 0; i--) {
         int bit = (num >> i) & 1; // Extract each bit
-        binary[27 - i] = bit ? '1' : '0'; // Store '1' or '0'
+        binary[num_bits - 1 - i] = bit ? '1' : '0'; // Store '1' or '0'
     }
-    binary[28] = '\0'; // Null-terminate the string
+    binary[num_bits] = '\0'; // Null-terminate the string
 
     return binary;
 }
@@ -107,7 +82,7 @@ char *Type_opcode (const char opcode [])
     }
 }
 
-char *concatenate_binary(const char *opcode, const char *address, const char *binary_opcode) {
+char *concatenate_J_Format(const char *opcode, const char *address, const char *binary_opcode) {
     // Determine the total length needed for the concatenated string
     int total_length = strlen(binary_opcode) + strlen(address) + 1; // +1 for the null terminator
     
@@ -182,7 +157,7 @@ int main()
     }
 
 
-    for (int i = 7; i < 8; i++)
+    for (int i = 0; i < 13; i++)
     {
         char *binary_opcode; // string for each instruction in binary
         char *type;
@@ -225,14 +200,34 @@ int main()
         if (strcmp(type, "J") == 0) {
             char *address = Words_array[1];
             int num = atoi(address);
-            address = int_to_binary_28bits(num);
+            address = int_to_binary(num,28);
 
             // Call the function to concatenate
-            binary_opcode = concatenate_binary(Words_array[0], address, binary_opcode);
+            binary_opcode = concatenate_J_Format(Words_array[0], address, binary_opcode);
 
-            printf("Binary Opcode of the %d instruction: %s\n", i + 1, binary_opcode);
-        } else {
-            printf("\nNOT J");
+            printf("Final Binary Code Of The %d Instruction: %s\n\n", i + 1, binary_opcode);
+        }
+        else if(strcmp(type, "R") == 0)
+        {
+            char *First_reg = Words_array[1]+1; // +1 3shan n skip el char R w ngeb el rkam el b3do
+            char *Sec_reg = Words_array[2]+1;
+            int num1 = atoi(First_reg);
+            int num2 = atoi(Sec_reg);
+            if (strcmp (Words_array[0], "LSL") == 0 || strcmp (Words_array[0], "LSR") == 0)
+            {
+                char *R3 = "00000";
+                char *SHAMT = "";
+
+            }
+
+            char *Third_reg = Words_array[3]+1;
+
+            int num3 = atoi(Third_reg);
+
+            First_reg = int_to_binary(num1,5);
+            Sec_reg = int_to_binary(num2,5);
+            Third_reg = int_to_binary(num3,5);
+
         }
         // Free memory for tokens
         for (int j = 0; j < current_pos; j++) {

@@ -52,14 +52,14 @@ char *int_to_binary(int num, int num_bits) {
     }
 
     // Ensure the number is within the supported range
-    if (num < 0 || num >= (1 << num_bits)) { 
+    if (num < 0 || num >= (1 << num_bits)) {  // 3ayzyn n check deh tany
         fprintf(stderr, "Number out of range for %d bits\n", num_bits);
         exit(1);
     }
 
     // Convert the integer to binary
     for (int i = num_bits - 1; i >= 0; i--) {
-        int bit = (num >> i) & 1; // Extract each bit
+        int bit = (num >> i) & 1; // Extract each bit 3ayzyn nfhm deh aktar
         binary[num_bits - 1 - i] = bit ? '1' : '0'; // Store '1' or '0'
     }        
     binary[num_bits] = '\0'; // Null-terminate the string

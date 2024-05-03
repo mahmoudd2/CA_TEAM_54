@@ -12,6 +12,13 @@ typedef struct Instruction {
 
 Instruction memory[MEMORY_SIZE];
 
+
+    
+
+
+
+
+
 int main() {
     FILE *file = fopen("CA.txt", "r");
     if (file == NULL) {

@@ -11,8 +11,70 @@
 //     int operands[1];
 // } Instruction;
 
-//int Memory_Array[2048];
-char *Memory_Array[2048]; 
+int Memory_Array[2048];
+// char *Memory_Array[2048]; 
+
+int pc = 0;
+const int R0 = 0;
+int R1  =0;
+int R2  =0;
+int R3  =0;
+int R4  =0;
+int R5  =0;
+int R6  =0;
+int R7  =0;
+int R8  =0;
+int R9  =0;
+int R10 =0;
+int R11 =0;
+int R12 =0;
+int R13 =0;
+int R14 =0;
+int R15 =0;
+int R16 =0;
+int R17 =0;
+int R18 =0;
+int R19 =0;
+int R20 =0;
+int R21 =0;
+int R22 =0;
+int R23 =0;
+int R24 =0;
+int R25 =0;
+int R26 =0;
+int R27 =0;
+int R28 =0;
+int R29 =0;
+int R30 =0;
+int R31 =0;
+
+
+void decode(int instruction)
+{
+    int opcode = 0;  // bits31:28
+    int R1 = 0;      // bits27:23
+    int R2 = 0;      // bit22:18
+    int R3 = 0;      // bits17:12
+    int shamt = 0;   // bits11:0
+    int imm = 0;     // bits17:0
+    int address = 0; // bits27:0
+    
+    int opcodebitmask = instruction & 0b11110000000000000000000000000000;
+    opcode = opcodebitmask >> 28;
+    printf("opcode: %d\n", opcode);
+}
+void fetch()
+{
+    for(int i = 0; i < 13; i++){
+        int instruction = 0;
+            
+        instruction = Memory_Array[pc];
+            
+        decode(instruction);
+        printf("instruction:%d  pc:%d\n", instruction, pc);
+        pc++;
+        }
+}
 
 char *opcode_to_binary(const char opcode []) {
     if (strcmp(opcode, "ADD") == 0) {
@@ -43,8 +105,6 @@ char *opcode_to_binary(const char opcode []) {
         return "NO OPCODE!"; // Default case
     }
 }
-
-
 
 // (1 << num_bits) deh bt shift left bel number of bits ya3ni lw el bits be 4 fa ha shift left hena 0001 be 4 fa htb2a 10000 el hya
 // equal 16 fa msln lw el num = -5 fa mfrod el binary representation bt3ha be equal 1011 el hya bardo equal lw 3mlna el -5 + 16 = 11
@@ -205,7 +265,6 @@ int main()
     //     //printf("%s\n", instructions[i]);
     // }
 
-
     for (int i = 0; i < 13; i++)
     {
         char *Final_inst; // string for each instruction in binary
@@ -300,14 +359,16 @@ int main()
 
             printf("Final Binary Code Of The %d Instruction: %s\n\n", i + 1, Final_inst);
         }
-        Memory_Array[i] = Final_inst;
-        char *temp = Memory_Array[i];
-        printf("Instruction %d %s\n", i+1, temp);
-        // Free memory for tokens
+        Memory_Array[i] = strtol(Final_inst, NULL, 2); // Convert binary string to integer directly
+        printf("Instruction %d %d\n", i + 1, Memory_Array[i]);
+
         for (int j = 0; j < current_pos; j++) {
             free(Words_array[j]);
         }
     }
+    
+    fetch();
+    
 
 
     return 0;

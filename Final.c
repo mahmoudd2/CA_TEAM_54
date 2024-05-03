@@ -11,7 +11,8 @@
 //     int operands[1];
 // } Instruction;
 
-int Memory_Array[2048];
+//int Memory_Array[2048];
+char *Memory_Array[2048]; 
 
 char *opcode_to_binary(const char opcode []) {
     if (strcmp(opcode, "ADD") == 0) {
@@ -58,7 +59,7 @@ char *int_to_binary(int num, int num_bits, const char *type) {
 
     if (strcmp(type, "IMM") == 0) { // 2's complement handling
         if (num < 0) { // If negative, convert to 2's complement
-            num += (1 << num_bits);
+            num += (1 << num_bits); // -5 + (10000) =11
         }
         for (int i = num_bits - 1; i >= 0; i--) {
             if (num & (1 << i)) {
@@ -105,7 +106,7 @@ char *concatenate_J_Format(const char *address, const char *binary_opcode) {
     }
     
     // Copy the original binary_opcode to concatenated
-    strcpy(concatenated, binary_opcode);
+    strcpy(concatenated, binary_opcode); 
     
     // Concatenate the binary address to concatenated
     strcat(concatenated, address);
@@ -150,6 +151,9 @@ char *concatenate_I_Format(const char *R1, const char *R2, const char *IMM, cons
     strcat(concatenated,IMM);
     return concatenated;
 }
+
+
+
 
 int main() 
 {
@@ -197,14 +201,14 @@ int main()
     }
 
     //printf("Parsed Instructions:\n");
-    for (int i = 0; i < num_instructions; i++) {
-        //printf("%s\n", instructions[i]);
-    }
+    // for (int i = 0; i < num_instructions; i++) {
+    //     //printf("%s\n", instructions[i]);
+    // }
 
 
     for (int i = 0; i < 13; i++)
     {
-        char *binary_opcode; // string for each instruction in binary
+        char *Final_inst; // string for each instruction in binary
         char *type;
         int inst_length = strlen(instructions[i]);
         char *Words_array[inst_length]; // array to store tokens
@@ -230,27 +234,26 @@ int main()
             token = strtok(NULL, " ");
         }
 
-        // Print the first token
         for(int j = 0; j < current_pos; j++)
         {
             printf("Token %d of instruction %d: %s\n",j+1, i + 1,Words_array[j]);
         }
             
-            binary_opcode = opcode_to_binary(Words_array[0]);
-            printf("Binary Opcode of the %d instruction: %s\n", i+1, binary_opcode);
-            type = Type_opcode(binary_opcode);
+            Final_inst = opcode_to_binary(Words_array[0]);
+            printf("Binary Opcode of the %d instruction: %s\n", i+1, Final_inst);
+            type = Type_opcode(Final_inst);
             printf("This opcode have the %s-Format\n\n",type);
 
 
         if (strcmp(type, "J") == 0) {
             char *address = Words_array[1];
-            int num = atoi(address);
+            int num = atoi(address); //100
             address = int_to_binary(num,28,"Address"); 
 
             // Call the function to concatenate
-            binary_opcode = concatenate_J_Format(address, binary_opcode);
+            Final_inst = concatenate_J_Format(address, Final_inst);
 
-            printf("Final Binary Code Of The %d Instruction: %s\n\n", i + 1, binary_opcode);
+            printf("Final Binary Code Of The %d Instruction: %s\n\n", i + 1, Final_inst);
         }
         else if(strcmp(type, "R") == 0)
         {
@@ -277,9 +280,9 @@ int main()
                 Third_reg = int_to_binary(num3,5,"Reg");
                 SHAMT = "0000000000000";
             }
-            binary_opcode = concatenate_R_Format(First_reg, Sec_reg, Third_reg, SHAMT, binary_opcode);
+            Final_inst = concatenate_R_Format(First_reg, Sec_reg, Third_reg, SHAMT, Final_inst);
 
-            printf("Final Binary Code Of The %d Instruction: %s\n\n", i + 1, binary_opcode);
+            printf("Final Binary Code Of The %d Instruction: %s\n\n", i + 1, Final_inst);
 
         }
         else if (strcmp(type, "I") == 0)
@@ -293,10 +296,13 @@ int main()
             char *IMM = Words_array[3];
             int num3 = atoi(IMM);
             IMM = int_to_binary(num3,18,"IMM");
-            binary_opcode = concatenate_I_Format(First_reg, Sec_reg, IMM, binary_opcode);
+            Final_inst = concatenate_I_Format(First_reg, Sec_reg, IMM, Final_inst);
 
-            printf("Final Binary Code Of The %d Instruction: %s\n\n", i + 1, binary_opcode);
+            printf("Final Binary Code Of The %d Instruction: %s\n\n", i + 1, Final_inst);
         }
+        Memory_Array[i] = Final_inst;
+        char *temp = Memory_Array[i];
+        printf("Instruction %d %s\n", i+1, temp);
         // Free memory for tokens
         for (int j = 0; j < current_pos; j++) {
             free(Words_array[j]);

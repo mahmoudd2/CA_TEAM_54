@@ -14,39 +14,43 @@
 int Memory_Array[2048];
 // char *Memory_Array[2048]; 
 
+int registerFile [] = {0,16,87,54,102,434,33,67,98,49,55,9,18,1,32,45,0,6,7,94,132,134,73,67,98,49,55,9,18,1,32,45};
+
+
 int pc = 0;
 const int R0 = 0;
-int R1  =0;
-int R2  =0;
-int R3  =0;
-int R4  =0;
-int R5  =0;
-int R6  =0;
-int R7  =0;
-int R8  =0;
-int R9  =0;
-int R10 =0;
-int R11 =0;
-int R12 =0;
-int R13 =0;
-int R14 =0;
-int R15 =0;
-int R16 =0;
-int R17 =0;
-int R18 =0;
-int R19 =0;
-int R20 =0;
-int R21 =0;
-int R22 =0;
-int R23 =0;
-int R24 =0;
-int R25 =0;
-int R26 =0;
-int R27 =0;
-int R28 =0;
-int R29 =0;
-int R30 =0;
-int R31 =0;
+
+// int R1  =0;
+// int R2  =0;
+// int R3  =0;
+// int R4  =0;
+// int R5  =0;
+// int R6  =0;
+// int R7  =0;
+// int R8  =0;
+// int R9  =0;
+// int R10 =0;
+// int R11 =0;
+// int R12 =0;
+// int R13 =0;
+// int R14 =0;
+// int R15 =0;
+// int R16 =0;
+// int R17 =0;
+// int R18 =0;
+// int R19 =0;
+// int R20 =0;
+// int R21 =0;
+// int R22 =0;
+// int R23 =0;
+// int R24 =0;
+// int R25 =0;
+// int R26 =0;
+// int R27 =0;
+// int R28 =0;
+// int R29 =0;
+// int R30 =0;
+// int R31 =0;
 
 
 void decode(int instruction)
@@ -54,14 +58,37 @@ void decode(int instruction)
     int opcode = 0;  // bits31:28
     int R1 = 0;      // bits27:23
     int R2 = 0;      // bit22:18
-    int R3 = 0;      // bits17:12
-    int shamt = 0;   // bits11:0
+    int R3 = 0;      // bits17:13
+    int shamt = 0;   // bits12:0
     int imm = 0;     // bits17:0
     int address = 0; // bits27:0
     
+    int R1Value;
+    int R2Value;
+    int R3Value;
+
     int opcodebitmask = instruction & 0b11110000000000000000000000000000;
     opcode = opcodebitmask >> 28;
     printf("opcode: %d\n", opcode);
+
+    int R1bitmask = instruction & 0b00001111100000000000000000000000;
+    R1 = R1bitmask >> 23;
+    R1Value = registerFile[R1];
+    //printf("R1 Value: %d\n",R1Value);
+        
+    int R2bitmask = instruction & 0b0000000001111100000000000000000;
+    R2 = R2bitmask >> 18;
+    R2Value = registerFile[R2];
+    
+    int R3bitmask = instruction & 0b0000000000000011111000000000000;
+    R3 = R3bitmask >> 12;
+    R3Value = registerFile[R3];
+
+    int shamtbitmask = instruction & 0b00000000000000000001111111111111;
+        
+    imm  = instruction & 0b00000000000000111111111111111111;
+        
+    address = instruction & 0b00001111111111111111111111111111;
 }
 void fetch()
 {
@@ -361,7 +388,6 @@ int main()
         }
         Memory_Array[i] = strtol(Final_inst, NULL, 2); // Convert binary string to integer directly
         printf("Instruction %d %d\n", i + 1, Memory_Array[i]);
-
         for (int j = 0; j < current_pos; j++) {
             free(Words_array[j]);
         }

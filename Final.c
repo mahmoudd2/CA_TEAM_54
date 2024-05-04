@@ -357,7 +357,7 @@ int main()
             // Allocate memory for the token
             Words_array[current_pos] = malloc(strlen(token) + 1);
             if (Words_array[current_pos] == NULL) {
-                printf(stderr, "Error allocating memory\n");
+                fprintf(stderr, "Error allocating memory\n");
                 exit(1);
             }
 

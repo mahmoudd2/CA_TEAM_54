@@ -14,7 +14,7 @@
 int Memory_Array[2048];
 // char *Memory_Array[2048]; 
 
-int registerFile [] = {0,16,16,54,102,25,33,67,98,49,55,9,18,1,32,45,0,6,7,94,132,134,73,67,62,2,50,19,11,10,52,75};
+int registerFile [] = {0,25,16,54,102,25,33,67,98,49,55,9,18,1,32,45,0,6,7,94,132,134,73,67,62,2,50,19,11,10,52,75};
 
 
 int pc = 0;
@@ -52,6 +52,40 @@ const int R0 = 0;
 // int R30 =0;
 // int R31 =0;
 
+char *int_to_binary(int num, int num_bits, const char *type) {
+    // Allocate memory for the binary string
+    char *binary = (char *)malloc((num_bits + 1) * sizeof(char)); // +1 for the null terminator
+    if (binary == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
+    }
+
+    if (strcmp(type, "IMM") == 0) { // 2's complement handling
+        if (num < 0) { // If negative, convert to 2's complement
+            num += (1 << num_bits); // -5 + (10000) =11
+        }
+        for (int i = num_bits - 1; i >= 0; i--) {
+            if (num & (1 << i)) {
+                binary[num_bits - 1 - i] = '1'; // Set the bit to '1' if it's set in num
+            } else {
+                binary[num_bits - 1 - i] = '0'; // Set the bit to '0' if it's not set in num
+            }
+        }
+    } else { // Normal positive number handling
+        for (int i = num_bits - 1; i >= 0; i--) {
+            if (num & (1 << i)) {
+                binary[num_bits - 1 - i] = '1'; // Set the bit to '1' if it's set in num
+            } else {
+                binary[num_bits - 1 - i] = '0'; // Set the bit to '0' if it's not set in num
+            }
+        }
+    }        
+    binary[num_bits] = '\0'; // Null-terminate the string
+
+    return binary;
+}
+
+
 void excute(int opcode, int R1, int R2, int R3, int SHAMT, signed int IMM, int Address)
 {
     int result = 0;
@@ -83,12 +117,25 @@ void excute(int opcode, int R1, int R2, int R3, int SHAMT, signed int IMM, int A
     case 6:
         result = registerFile[R2] ^ IMM; // ^ deh 3lamet el XOR fe C
         break;
-    case 7:
-        char *temp;
-        temp = int_to_binary(pc,4,"PC"); 
-        temp = temp || Address;
-        pc = temp;
+    // case 7:
+    //     char *temp = int_to_binary(pc,4,"PC");  
+    //     char *temp2 = int_to_binary(Address,28,"Address");
+    //     char *final = strcat(temp,temp2);
+    //     pc = strtol(final,NULL,2);
+    //     break;
+    case 8:
+        result = registerFile[R2] << SHAMT;
         break;
+    case 9:
+        result = registerFile[R2] << SHAMT;
+        break;
+    case 10:
+        result = Memory_Array[R2 + IMM];
+        break;
+    case 11:
+        int temp = registerFile[R1] ;
+        Memory_Array[R2 + IMM] = temp;
+        printf("memory array: %i\n",Memory_Array[R2 + IMM]);
     default:
         break;
     }
@@ -194,7 +241,7 @@ void decode(int instruction)
 
 void fetch()
 {
-    for(int i = 0; i < 13; i++){
+    for(int i = 0; i < 12; i++){
         int instruction = 0;
             
         instruction = Memory_Array[pc];
@@ -240,38 +287,7 @@ char *opcode_to_binary(const char opcode []) {
 // (1 << num_bits) deh bt shift left bel number of bits ya3ni lw el bits be 4 fa ha shift left hena 0001 be 4 fa htb2a 10000 el hya
 // equal 16 fa msln lw el num = -5 fa mfrod el binary representation bt3ha be equal 1011 el hya bardo equal lw 3mlna el -5 + 16 = 11
 // w gebna el binary representation bta3 el 11 el hwa = 1011  
-char *int_to_binary(int num, int num_bits, const char *type) {
-    // Allocate memory for the binary string
-    char *binary = (char *)malloc((num_bits + 1) * sizeof(char)); // +1 for the null terminator
-    if (binary == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
-        exit(1);
-    }
 
-    if (strcmp(type, "IMM") == 0) { // 2's complement handling
-        if (num < 0) { // If negative, convert to 2's complement
-            num += (1 << num_bits); // -5 + (10000) =11
-        }
-        for (int i = num_bits - 1; i >= 0; i--) {
-            if (num & (1 << i)) {
-                binary[num_bits - 1 - i] = '1'; // Set the bit to '1' if it's set in num
-            } else {
-                binary[num_bits - 1 - i] = '0'; // Set the bit to '0' if it's not set in num
-            }
-        }
-    } else { // Normal positive number handling
-        for (int i = num_bits - 1; i >= 0; i--) {
-            if (num & (1 << i)) {
-                binary[num_bits - 1 - i] = '1'; // Set the bit to '1' if it's set in num
-            } else {
-                binary[num_bits - 1 - i] = '0'; // Set the bit to '0' if it's not set in num
-            }
-        }
-    }        
-    binary[num_bits] = '\0'; // Null-terminate the string
-
-    return binary;
-}
 
 char *Type_opcode (const char opcode [])
 {
@@ -399,7 +415,7 @@ int main()
     //     //printf("%s\n", instructions[i]);
     // }
 
-    for (int i = 0; i < 13; i++)
+    for (int i = 0; i < 12; i++)
     {
         char *Final_inst; // string for each instruction in binary
         char *type;

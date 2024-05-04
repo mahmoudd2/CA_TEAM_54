@@ -14,7 +14,7 @@
 int Memory_Array[2048];
 // char *Memory_Array[2048]; 
 
-int registerFile [] = {0,16,87,54,102,434,33,67,98,49,55,9,18,1,32,45,0,6,7,94,132,134,73,67,62,89,50,19,11,10,52,75};
+int registerFile [] = {0,16,16,54,102,25,33,67,98,49,55,9,18,1,32,45,0,6,7,94,132,134,73,67,62,2,50,19,11,10,52,75};
 
 
 int pc = 0;
@@ -52,6 +52,53 @@ const int R0 = 0;
 // int R30 =0;
 // int R31 =0;
 
+void excute(int opcode, int R1, int R2, int R3, int SHAMT, signed int IMM, int Address)
+{
+    int result = 0;
+    int resultpc = 0;
+    switch (opcode)
+    {
+    case 0:
+        result = registerFile[R2] + registerFile[R3];
+        break;
+    case 1:
+        result = registerFile[R2] - registerFile[R3];
+        break;
+    case 2:
+        result = registerFile[R2] * registerFile[R3];
+        break;
+    case 3:
+        result = IMM;
+        break;
+    case 4:
+        if(registerFile[R1] == registerFile[R2])
+        {
+            resultpc = pc + 1 + IMM; 
+            pc = resultpc;
+        }
+        break;
+    case 5:
+        result = registerFile[R2] & registerFile[R3];
+        break;
+    case 6:
+        result = registerFile[R2] ^ IMM; // ^ deh 3lamet el XOR fe C
+        break;
+    case 7:
+        char *temp;
+        temp = int_to_binary(pc,4,"PC"); 
+        temp = temp || Address;
+        pc = temp;
+        break;
+    default:
+        break;
+    }
+    // printf("result: %d\n", result);
+    if (opcode != 7 && opcode != 4 && R1 != 0)
+    {
+        registerFile[R1] = result;
+    }
+    // printf("pc in excute %i\n",pc);
+}
 
 void decode(int instruction)
 {
@@ -63,9 +110,9 @@ void decode(int instruction)
     signed int Imm = 0;     // bits17:0
     int Address = 0; // bits27:0
     
-    int R1Value;
-    int R2Value;
-    int R3Value;
+    // int R1Value;
+    // int R2Value;
+    // int R3Value;
 
     unsigned int opcodebitmask = instruction & 0b11110000000000000000000000000000;
     opcode = opcodebitmask >> 28;
@@ -73,16 +120,16 @@ void decode(int instruction)
     
     unsigned int R1bitmask = instruction & 0b00001111100000000000000000000000;
     R1 = R1bitmask >> 23;
-    R1Value = registerFile[R1];
+    // R1Value = registerFile[R1];
     //printf("R1 Value: %d\n",R1Value);
         
     unsigned int R2bitmask = instruction & 0b00000000011111000000000000000000;
     R2 = R2bitmask >> 18;
-    R2Value = registerFile[R2];
+    // R2Value = registerFile[R2];
     
     unsigned int R3bitmask = instruction & 0b00000000000000111110000000000000;
     R3 = R3bitmask >> 13;
-    R3Value = registerFile[R3];
+    // R3Value = registerFile[R3];
 
     Shamt = instruction & 0b00000000000000000001111111111111;
         
@@ -126,7 +173,9 @@ void decode(int instruction)
             break;    
 
     }
+    excute(opcode,R1,R2,R3,Shamt,Imm,Address);
 
+    printf("PC %i\n",pc);
     printf("Instruction %i\n",pc + 1);
     printf("opcode = %i\n",opcode);
     printf("First Reg = %i\n",R1);
@@ -135,10 +184,12 @@ void decode(int instruction)
     printf("Shift Amount = %i\n",Shamt);
     printf("Immediate Value = %i\n",Imm);
     printf("Address = %i\n",Address);
-    printf("value[First Reg] = %i\n",R1Value);
-    printf("value[Second Reg] = %i\n",R2Value);
-    printf("value[Third Reg] = %i\n",R3Value);
+    printf("value[First Reg] = %i\n",registerFile[R1]);
+    printf("value[Second Reg] = %i\n",registerFile[R2]);
+    printf("value[Third Reg] = %i\n",registerFile[R3]);
     printf("---------- \n");
+
+    // excute(opcode,R1,R2,R3,Shamt,Imm,Address);
 }
 
 void fetch()
@@ -153,6 +204,8 @@ void fetch()
         pc++;
         }
 }
+
+
 
 char *opcode_to_binary(const char opcode []) {
     if (strcmp(opcode, "ADD") == 0) {
@@ -222,16 +275,19 @@ char *int_to_binary(int num, int num_bits, const char *type) {
 
 char *Type_opcode (const char opcode [])
 {
-    if (strcmp(opcode, "0000") == 0 || strcmp(opcode, "0001") == 0 ||
-        strcmp(opcode, "0010") == 0 || strcmp(opcode, "0101") == 0 ||
-        strcmp(opcode, "1000") == 0 || strcmp(opcode, "1001") == 0) {
+    if (strcmp(opcode, "ADD") == 0 || strcmp(opcode, "SUB") == 0 ||
+        strcmp(opcode, "MUL") == 0 || strcmp(opcode, "AND") == 0 ||
+        strcmp(opcode, "LSL") == 0 || strcmp(opcode, "LSR") == 0) {
         return "R";
-    } else if (strcmp(opcode, "0011") == 0 || strcmp(opcode, "0100") == 0 ||
-               strcmp(opcode, "0110") == 0 || strcmp(opcode, "1010") == 0 ||
-               strcmp(opcode, "1011") == 0)  {
+    } else if (
+        strcmp(opcode, "MOVI") == 0 || strcmp(opcode, "JEQ") == 0 ||
+        strcmp(opcode, "XORI") == 0 || strcmp(opcode, "MOVR") == 0 ||
+        strcmp(opcode, "MOVM") == 0)  {
         return "I";
-    } else if (strcmp(opcode, "0111") == 0) {
+    } else if (strcmp(opcode, "JMP") == 0) {
         return "J";
+    }else {
+        return "Unkown";
     }
 }
 
@@ -378,11 +434,11 @@ int main()
             
             Final_inst = opcode_to_binary(Words_array[0]);
             // printf("Binary Opcode of the %d instruction: %s\n", i+1, Final_inst);
-            type = Type_opcode(Final_inst);
+            type = Type_opcode(Words_array[0]);
             // printf("This opcode have the %s-Format\n\n",type);
 
 
-        if (strcmp(type, "J") == 0) {
+        if (type != NULL && strcmp(type, "J") == 0) {
             char *address = Words_array[1];
             int num = atoi(address); //100
             address = int_to_binary(num,28,"Address"); 
@@ -392,7 +448,7 @@ int main()
 
             // printf("Final Binary Code Of The %d Instruction: %s\n\n", i + 1, Final_inst);
         }
-        else if(strcmp(type, "R") == 0)
+        else if(type != NULL && strcmp(type, "R") == 0)
         {
             char *First_reg = Words_array[1]+1; // +1 3shan n skip el char R w ngeb el rkam el b3do 
             char *Sec_reg = Words_array[2]+1;
@@ -422,7 +478,7 @@ int main()
             // printf("Final Binary Code Of The %d Instruction: %s\n\n", i + 1, Final_inst);
 
         }
-        else if (strcmp(type, "I") == 0)
+        else if (type != NULL && strcmp(type, "I") == 0)
         {
             char *First_reg = Words_array[1]+1;
             char *Sec_reg = Words_array[2]+1;
@@ -446,8 +502,6 @@ int main()
     
     fetch();
     
-
-
     return 0;
     
 }

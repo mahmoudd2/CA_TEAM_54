@@ -52,6 +52,18 @@ const int R0 = 0;
 // int R30 =0;
 // int R31 =0;
 
+void fetch()
+{
+    for(int i = 0; i < 13; i++){
+        int instruction = 0;
+            
+        instruction = Memory_Array[pc];
+            
+        decode(instruction);
+        // printf("instruction:%d  pc:%d\n", instruction, pc);
+        pc++;
+        }
+}
 
 void decode(int instruction)
 {
@@ -139,18 +151,6 @@ void decode(int instruction)
     printf("value[Second Reg] = %i\n",R2Value);
     printf("value[Third Reg] = %i\n",R3Value);
     printf("---------- \n");
-}
-void fetch()
-{
-    for(int i = 0; i < 13; i++){
-        int instruction = 0;
-            
-        instruction = Memory_Array[pc];
-            
-        decode(instruction);
-        // printf("instruction:%d  pc:%d\n", instruction, pc);
-        pc++;
-        }
 }
 
 char *opcode_to_binary(const char opcode []) {

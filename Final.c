@@ -14,7 +14,7 @@
 int Memory_Array[2048];
 // char *Memory_Array[2048]; 
 
-int registerFile [] = {0,16,87,54,102,434,33,67,98,49,55,9,18,1,32,45,0,6,7,94,132,134,73,67,98,49,55,9,18,1,32,45};
+int registerFile [] = {0,16,87,54,102,434,33,67,98,49,55,9,18,1,32,45,0,6,7,94,132,134,73,67,62,89,50,19,11,10,52,75};
 
 
 int pc = 0;
@@ -59,36 +59,86 @@ void decode(int instruction)
     int R1 = 0;      // bits27:23
     int R2 = 0;      // bit22:18
     int R3 = 0;      // bits17:13
-    int shamt = 0;   // bits12:0
-    int imm = 0;     // bits17:0
-    int address = 0; // bits27:0
+    unsigned int Shamt = 0;   // bits12:0
+    signed int Imm = 0;     // bits17:0
+    int Address = 0; // bits27:0
     
     int R1Value;
     int R2Value;
     int R3Value;
 
-    int opcodebitmask = instruction & 0b11110000000000000000000000000000;
+    unsigned int opcodebitmask = instruction & 0b11110000000000000000000000000000;
     opcode = opcodebitmask >> 28;
-    printf("opcode: %d\n", opcode);
-
-    int R1bitmask = instruction & 0b00001111100000000000000000000000;
+    // printf("opcode: %d\n", opcode);
+    
+    unsigned int R1bitmask = instruction & 0b00001111100000000000000000000000;
     R1 = R1bitmask >> 23;
     R1Value = registerFile[R1];
     //printf("R1 Value: %d\n",R1Value);
         
-    int R2bitmask = instruction & 0b0000000001111100000000000000000;
+    unsigned int R2bitmask = instruction & 0b00000000011111000000000000000000;
     R2 = R2bitmask >> 18;
     R2Value = registerFile[R2];
     
-    int R3bitmask = instruction & 0b0000000000000011111000000000000;
-    R3 = R3bitmask >> 12;
+    unsigned int R3bitmask = instruction & 0b00000000000000111110000000000000;
+    R3 = R3bitmask >> 13;
     R3Value = registerFile[R3];
 
-    int shamtbitmask = instruction & 0b00000000000000000001111111111111;
+    Shamt = instruction & 0b00000000000000000001111111111111;
         
-    imm  = instruction & 0b00000000000000111111111111111111;
+    Imm  = instruction & 0b00000000000000111111111111111111;
         
-    address = instruction & 0b00001111111111111111111111111111;
+    Address = instruction & 0b00001111111111111111111111111111;
+    
+    switch(opcode)
+    {
+        case 0:
+        case 1:
+        case 2:
+        case 5:
+            // R-format mn gher SHAMT
+            Imm = 0;
+            Shamt = 0;
+            Address = 0;
+            break;
+        case 8:
+        case 9:
+            // R-format with SHAMT
+            Imm = 0;
+            Address = 0;
+            break;
+        case 3:
+        case 4:
+        case 6:
+        case 10:
+        case 11:
+            // I-format
+            R3 = 0;
+            Shamt = 0;
+            Address = 0;
+            break;
+        case 7:
+            // J-format
+            Imm = 0;
+            Shamt = 0;
+            break;
+        default:
+            break;    
+
+    }
+
+    printf("Instruction %i\n",pc + 1);
+    printf("opcode = %i\n",opcode);
+    printf("First Reg = %i\n",R1);
+    printf("Second Reg = %i\n",R2);
+    printf("Third reg = %i\n",R3);
+    printf("Shift Amount = %i\n",Shamt);
+    printf("Immediate Value = %i\n",Imm);
+    printf("Address = %i\n",Address);
+    printf("value[First Reg] = %i\n",R1Value);
+    printf("value[Second Reg] = %i\n",R2Value);
+    printf("value[Third Reg] = %i\n",R3Value);
+    printf("---------- \n");
 }
 void fetch()
 {
@@ -98,7 +148,7 @@ void fetch()
         instruction = Memory_Array[pc];
             
         decode(instruction);
-        printf("instruction:%d  pc:%d\n", instruction, pc);
+        // printf("instruction:%d  pc:%d\n", instruction, pc);
         pc++;
         }
 }
@@ -306,7 +356,7 @@ int main()
             // Allocate memory for the token
             Words_array[current_pos] = malloc(strlen(token) + 1);
             if (Words_array[current_pos] == NULL) {
-                fprintf(stderr, "Error allocating memory\n");
+                printf(stderr, "Error allocating memory\n");
                 exit(1);
             }
 
@@ -322,13 +372,13 @@ int main()
 
         for(int j = 0; j < current_pos; j++)
         {
-            printf("Token %d of instruction %d: %s\n",j+1, i + 1,Words_array[j]);
+            // printf("Token %d of instruction %d: %s\n",j+1, i + 1,Words_array[j]);
         }
             
             Final_inst = opcode_to_binary(Words_array[0]);
-            printf("Binary Opcode of the %d instruction: %s\n", i+1, Final_inst);
+            // printf("Binary Opcode of the %d instruction: %s\n", i+1, Final_inst);
             type = Type_opcode(Final_inst);
-            printf("This opcode have the %s-Format\n\n",type);
+            // printf("This opcode have the %s-Format\n\n",type);
 
 
         if (strcmp(type, "J") == 0) {
@@ -339,7 +389,7 @@ int main()
             // Call the function to concatenate
             Final_inst = concatenate_J_Format(address, Final_inst);
 
-            printf("Final Binary Code Of The %d Instruction: %s\n\n", i + 1, Final_inst);
+            // printf("Final Binary Code Of The %d Instruction: %s\n\n", i + 1, Final_inst);
         }
         else if(strcmp(type, "R") == 0)
         {
@@ -362,13 +412,13 @@ int main()
             else
             {
                 Third_reg = Words_array[3]+1;
-                int num3 = atoi(Third_reg);
+                unsigned int num3 = atoi(Third_reg);
                 Third_reg = int_to_binary(num3,5,"Reg");
                 SHAMT = "0000000000000";
+
             }
             Final_inst = concatenate_R_Format(First_reg, Sec_reg, Third_reg, SHAMT, Final_inst);
-
-            printf("Final Binary Code Of The %d Instruction: %s\n\n", i + 1, Final_inst);
+            // printf("Final Binary Code Of The %d Instruction: %s\n\n", i + 1, Final_inst);
 
         }
         else if (strcmp(type, "I") == 0)
@@ -384,10 +434,10 @@ int main()
             IMM = int_to_binary(num3,18,"IMM");
             Final_inst = concatenate_I_Format(First_reg, Sec_reg, IMM, Final_inst);
 
-            printf("Final Binary Code Of The %d Instruction: %s\n\n", i + 1, Final_inst);
+            // printf("Final Binary Code Of The %d Instruction: %s\n\n", i + 1, Final_inst);
         }
         Memory_Array[i] = strtol(Final_inst, NULL, 2); // Convert binary string to integer directly
-        printf("Instruction %d %d\n", i + 1, Memory_Array[i]);
+        // printf("Instruction %d %d\n", i + 1, Memory_Array[i]);
         for (int j = 0; j < current_pos; j++) {
             free(Words_array[j]);
         }

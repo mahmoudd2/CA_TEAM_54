@@ -14,7 +14,8 @@
 int Memory_Array[2048];
 // char *Memory_Array[2048]; 
 
-int registerFile [] = {0,25,16,54,102,25,33,67,98,49,55,9,18,1,32,45,0,6,7,94,132,134,73,67,62,2,50,19,11,10,52,75};
+int registerFile [] = {0,25,2,54,102,25,33,67,98,49,55,9,18,1,32,45,0,6,7,94,132,134,73,67,62,2,50,19,11,10,52,75};
+// int Num_Inst = sizeof(Memory_Array)/sizeof(int);
 
 
 int pc = 0;
@@ -62,7 +63,7 @@ char *int_to_binary(int num, int num_bits, const char *type) {
 
     if (strcmp(type, "IMM") == 0) { // 2's complement handling
         if (num < 0) { // If negative, convert to 2's complement
-            num += (1 << num_bits); // -5 + (10000) =11
+            num += (1 << num_bits); // num = -5 + (10000) = 11
         }
         for (int i = num_bits - 1; i >= 0; i--) {
             if (num & (1 << i)) {
@@ -72,7 +73,7 @@ char *int_to_binary(int num, int num_bits, const char *type) {
             }
         }
     } else { // Normal positive number handling
-        for (int i = num_bits - 1; i >= 0; i--) {
+        for (int i = num_bits - 1; i >= 0; i--) { //num = 5   num_bits = 13 bit  i = 12 // 
             if (num & (1 << i)) {
                 binary[num_bits - 1 - i] = '1'; // Set the bit to '1' if it's set in num
             } else {
@@ -89,7 +90,7 @@ char *int_to_binary(int num, int num_bits, const char *type) {
 void excute(int opcode, int R1, int R2, int R3, int SHAMT, signed int IMM, int Address)
 {
     int result = 0;
-    int resultpc = 0;
+    // int resultpc = 0;
     switch (opcode)
     {
     case 0:
@@ -107,8 +108,7 @@ void excute(int opcode, int R1, int R2, int R3, int SHAMT, signed int IMM, int A
     case 4:
         if(registerFile[R1] == registerFile[R2])
         {
-            resultpc = pc + 1 + IMM; 
-            pc = resultpc;
+            pc = pc + 1 + IMM;
         }
         break;
     case 5:
@@ -127,15 +127,16 @@ void excute(int opcode, int R1, int R2, int R3, int SHAMT, signed int IMM, int A
         result = registerFile[R2] << SHAMT;
         break;
     case 9:
-        result = registerFile[R2] << SHAMT;
+        result = registerFile[R2] >> SHAMT;
         break;
     case 10:
         result = Memory_Array[R2 + IMM];
         break;
-    case 11:
+    case 11: // add = 100 
         int temp = registerFile[R1] ;
         Memory_Array[R2 + IMM] = temp;
-        printf("memory array: %i\n",Memory_Array[R2 + IMM]);
+        // printf("memory array: %i\n",Memory_Array[R2 + IMM]);
+        // printf("temp: %i\n",temp);
     default:
         break;
     }
@@ -160,7 +161,9 @@ void decode(int instruction)
     // int R1Value;
     // int R2Value;
     // int R3Value;
-
+    
+    //0b00100000100010110010000000000000
+    // 256 128 64 32 16 8 4 2 1
     unsigned int opcodebitmask = instruction & 0b11110000000000000000000000000000;
     opcode = opcodebitmask >> 28;
     // printf("opcode: %d\n", opcode);
@@ -191,14 +194,15 @@ void decode(int instruction)
         case 2:
         case 5:
             // R-format mn gher SHAMT
-            Imm = 0;
-            Shamt = 0;
+            Imm     = 0;
+            Shamt   = 0;
             Address = 0;
             break;
         case 8:
         case 9:
             // R-format with SHAMT
-            Imm = 0;
+            R3      = 0;
+            Imm     = 0;
             Address = 0;
             break;
         case 3:
@@ -207,13 +211,16 @@ void decode(int instruction)
         case 10:
         case 11:
             // I-format
-            R3 = 0;
-            Shamt = 0;
+            R3      = 0;
+            Shamt   = 0;
             Address = 0;
             break;
         case 7:
             // J-format
-            Imm = 0;
+            R1    = 0;
+            R2    = 0;
+            R3    = 0;
+            Imm   = 0;
             Shamt = 0;
             break;
         default:
@@ -456,7 +463,7 @@ int main()
 
         if (type != NULL && strcmp(type, "J") == 0) {
             char *address = Words_array[1];
-            int num = atoi(address); //100
+            int num = atoi(address); //10
             address = int_to_binary(num,28,"Address"); 
 
             // Call the function to concatenate
@@ -508,7 +515,7 @@ int main()
             Final_inst = concatenate_I_Format(First_reg, Sec_reg, IMM, Final_inst);
 
             // printf("Final Binary Code Of The %d Instruction: %s\n\n", i + 1, Final_inst);
-        }
+        } // 11000000000010000000000011000000
         Memory_Array[i] = strtol(Final_inst, NULL, 2); // Convert binary string to integer directly
         // printf("Instruction %d %d\n", i + 1, Memory_Array[i]);
         for (int j = 0; j < current_pos; j++) {

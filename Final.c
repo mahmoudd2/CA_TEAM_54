@@ -443,15 +443,15 @@ int main()
             token = strtok(NULL, " ");
         }
 
-        for(int j = 0; j < current_pos; j++)
-        {
-            // printf("Token %d of instruction %d: %s\n",j+1, i + 1,Words_array[j]);
-        }
+            // for(int j = 0; j < current_pos; j++)
+            // {
+            //     // printf("Token %d of instruction %d: %s\n",j+1, i + 1,Words_array[j]);
+            // }      EHNA MSH MEHTAGEN EL FOR LOOP DEH
             
-            Final_inst = opcode_to_binary(Words_array[0]);
-            // printf("Binary Opcode of the %d instruction: %s\n", i+1, Final_inst);
-            type = Type_opcode(Words_array[0]);
-            // printf("This opcode have the %s-Format\n\n",type);
+        Final_inst = opcode_to_binary(Words_array[0]);
+        // printf("Binary Opcode of the %d instruction: %s\n", i+1, Final_inst);
+        type = Type_opcode(Words_array[0]);
+        // printf("This opcode have the %s-Format\n\n",type);
 
 
         if (type != NULL && strcmp(type, "J") == 0) {

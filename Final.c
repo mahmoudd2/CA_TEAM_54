@@ -102,10 +102,11 @@ void writeback(int *decodedArray,int result)
             printf("Invalid register index: %d\n", First_Reg);
         }
     } else {
-        printf("Decoded array is NULL\n");
+        printf("Writeback is not doing anything rn\n");
     }
     registerFile[First_Reg] = result;
     // printf("operandddd: %d\n", WB.operands[0]);
+    printf("WB: Writeback operation\n");
 
 }
 
@@ -123,8 +124,9 @@ void memory(int *decodedArray,int result)
     }
     else
     {
-        printf("Decoded array is NULL\n");
-    } 
+        printf("memory is not doing anything rn\n");
+    }
+    printf("MEM: Memory operation\n");
     
 }
 
@@ -133,58 +135,65 @@ int execute(int *decodedArray)
 {
     int result = 0;
     // int resultpc = 0;
-    switch (decodedArray[0])
-    {
-    case 0:
-        result = decodedArray[2] + decodedArray[3];
-        break;
-    case 1:
-        result = decodedArray[2] - decodedArray[3];
-        break;
-    case 2:
-        result = decodedArray[2] * decodedArray[3];
-        break;
-    case 3:
-        result = decodedArray[5];
-        break;
-    case 4:
-        if(decodedArray[1] == decodedArray[2])
+    if (decodedArray != NULL){
+        switch (decodedArray[0])
         {
-            pc = pc + 1 + decodedArray[5];
+        case 0:
+            result = decodedArray[2] + decodedArray[3];
+            break;
+        case 1:
+            result = decodedArray[2] - decodedArray[3];
+            break;
+        case 2:
+            result = decodedArray[2] * decodedArray[3];
+            break;
+        case 3:
+            result = decodedArray[5];
+            break;
+        case 4:
+            if(decodedArray[1] == decodedArray[2])
+            {
+                pc = pc + 1 + decodedArray[5];
+            }
+            break;
+        case 5:
+            result = decodedArray[2] & decodedArray[3];
+            break;
+        case 6:
+            result = decodedArray[2] ^ decodedArray[5]; // ^ deh 3lamet el XOR fe C
+            break;
+        case 7:
+            int temp = (pc & 0b11110000000000000000000000000000) >> 28;
+            pc = temp | decodedArray[6];
+            // printf("PC: %d\n",pc);
+            break;
+        case 8:
+            result = decodedArray[2] << decodedArray[4];
+            break;
+        case 9:
+            result = decodedArray[2] >> decodedArray[4];
+            break;
+        case 10:
+        case 11:
+            result = decodedArray[2] + decodedArray[5];
+            break;
+        default:
+            break;
         }
-        break;
-    case 5:
-        result = decodedArray[2] & decodedArray[3];
-        break;
-    case 6:
-        result = decodedArray[2] ^ decodedArray[5]; // ^ deh 3lamet el XOR fe C
-        break;
-    case 7:
-        int temp = (pc & 0b11110000000000000000000000000000) >> 28;
-        pc = temp | decodedArray[6];
-        // printf("PC: %d\n",pc);
-        break;
-    case 8:
-        result = decodedArray[2] << decodedArray[4];
-        break;
-    case 9:
-        result = decodedArray[2] >> decodedArray[4];
-        break;
-    case 10:
-    case 11:
-        result = decodedArray[2] + decodedArray[5];
-        break;
-    default:
-        break;
+        // printf("result: %d\n", result);
+        if (decodedArray[0] != 7 && decodedArray[0] != 4 &&  decodedArray[1]!= 0)
+        {
+            // writeback(result);
+        } 
     }
-    // printf("result: %d\n", result);
-    if (decodedArray[0] != 7 && decodedArray[0] != 4 &&  decodedArray[1]!= 0)
+    else
     {
-        // writeback(result);
+        printf("execute is not doing anything rn\n\n");
     } 
 
     // printf("operand 1: %d\n",decodedArray[3]);
-    printf("pc in excute %i\n",pc);
+    // printf("pc in excute %i\n",pc);
+    printf("EX: Executing instruction\n");
     return result;
 }
 
@@ -255,7 +264,7 @@ int * decode(int instruction)
     // }
     // printf("]\n");
 
-    
+    printf("ID: Decoding instruction %d\n", instruction);
     return decodedArray;
 
 
@@ -362,19 +371,18 @@ int * decode(int instruction)
 
 int fetch()
 {
-    for(int i = 0; i < num_instructions; i++){
-        int instruction = 0;  
-        instruction = Memory_Array[pc];
-        int *temp = decode(instruction);
+    if(pc < num_instructions){
+        int instruction = Memory_Array[pc];
         pc++;
-        printf("instruction:%d  pc:%d\n", instruction, pc);
-        // while (pc < sizeof(Memory_Array) / sizeof(Memory_Array[0]))
-        // {
-        //     IF = Memory_Array[pc];
-        //     pc++;            
-        // }
+        printf("IF: Fetching instruction %d at pc = %d\n", instruction, pc);
         return instruction;
     }
+    else
+    {
+        printf("IF: End of program reached.\n");
+        return -1; // End of program
+    }
+    
 }
 
 
@@ -660,17 +668,21 @@ int main()
             free(Words_array[j]);
         }
     }
-    int IF_NUM = 1;
+
+    int IF_NUM = num_instructions * 2;
     int WB_NUM = 0;
     while (IF_NUM != WB_NUM )
     {
         int result;
         int INST;
-        printf("Clock Cycle: %d\n", clk);
+        printf("Clock Cycle: %d\n\n", clk);
+        
         if (clk % 2 == 1)
         {
             writeback(decodedArray,result);
             WB_NUM++;
+            printf("WB COUNT: %d\n",WB_NUM);
+
         }
         memory(decodedArray,result);
         result = execute(decodedArray);
@@ -679,11 +691,15 @@ int main()
         if (clk % 2 == 1)
         {
             INST = fetch();
-            IF_NUM++;
+            IF_NUM--;
+            printf("IF COUNT: %d\n",IF_NUM);
+            printf("INST: %d\n\n",INST);
+
         }
         clk++;
-        printf("[");
     }
+    // printf("[");
+
     //     for (int i = 0; i < sizeof(array); i++) {
     //         printf("%d", array[i]);
     //         if (i < sizeof(array) - 1) {

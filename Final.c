@@ -11,15 +11,24 @@
 //     int operands[1];
 // } Instruction;
 
-int Memory_Array[2048];
+typedef struct {
+    int inst; 
+    int operands[3];
+} Instruction;
+
+Instruction Memory_Array[2048];
 // char *Memory_Array[2048]; 
 
 int registerFile [] = {0,25,2,54,102,25,33,67,98,49,55,9,18,1,32,45,0,6,7,94,132,134,73,67,62,2,50,19,11,10,52,75};
 // int Num_Inst = sizeof(Memory_Array)/sizeof(int);
 
 
+
+// Define the pipeline stages
+Instruction IF, ID, EX, MEM, WB;
+
 int pc = 0;
-const int R0 = 0;
+// const int R0 = 0;
 
 // int R1  =0;
 // int R2  =0;
@@ -86,8 +95,13 @@ char *int_to_binary(int num, int num_bits, const char *type) {
     return binary;
 }
 
+// void memory()
+// {
 
-void excute(int opcode, int R1, int R2, int R3, int SHAMT, signed int IMM, int Address)
+// }
+
+
+void execute(int opcode, int R1, int R2, int R3, int SHAMT, signed int IMM, int Address)
 {
     int result = 0;
     // int resultpc = 0;
@@ -129,14 +143,14 @@ void excute(int opcode, int R1, int R2, int R3, int SHAMT, signed int IMM, int A
     case 9:
         result = registerFile[R2] >> SHAMT;
         break;
-    case 10:
-        result = Memory_Array[R2 + IMM];
-        break;
-    case 11: // add = 100 
-        int temp = registerFile[R1] ;
-        Memory_Array[R2 + IMM] = temp;
-        // printf("memory array: %i\n",Memory_Array[R2 + IMM]);
-        // printf("temp: %i\n",temp);
+    // case 10:
+    //     result = Memory_Array[R2 + IMM];
+    //     break;
+    // case 11: // add = 100 
+    //     int temp = registerFile[R1] ;
+    //     Memory_Array[R2 + IMM] = temp;
+    //     // printf("memory array: %i\n",Memory_Array[R2 + IMM]);
+    //     // printf("temp: %i\n",temp);
     default:
         break;
     }
@@ -144,12 +158,16 @@ void excute(int opcode, int R1, int R2, int R3, int SHAMT, signed int IMM, int A
     if (opcode != 7 && opcode != 4 && R1 != 0)
     {
         registerFile[R1] = result;
-    }
+    } // WB
+
+    EX = ID;
+    printf("operand 1: %d\n",EX.operands[3]);
     // printf("pc in excute %i\n",pc);
 }
 
-void decode(int instruction)
+void decode()
 {
+    ID = IF;
     int opcode = 0;  // bits31:28
     int R1 = 0;      // bits27:23
     int R2 = 0;      // bit22:18
@@ -164,28 +182,28 @@ void decode(int instruction)
     
     //0b00100000100010110010000000000000
     // 256 128 64 32 16 8 4 2 1
-    unsigned int opcodebitmask = instruction & 0b11110000000000000000000000000000;
+    unsigned int opcodebitmask = ID.inst & 0b11110000000000000000000000000000;
     opcode = opcodebitmask >> 28;
     // printf("opcode: %d\n", opcode);
     
-    unsigned int R1bitmask = instruction & 0b00001111100000000000000000000000;
+    unsigned int R1bitmask = ID.inst & 0b00001111100000000000000000000000;
     R1 = R1bitmask >> 23;
     // R1Value = registerFile[R1];
     //printf("R1 Value: %d\n",R1Value);
         
-    unsigned int R2bitmask = instruction & 0b00000000011111000000000000000000;
+    unsigned int R2bitmask = ID.inst & 0b00000000011111000000000000000000;
     R2 = R2bitmask >> 18;
     // R2Value = registerFile[R2];
     
-    unsigned int R3bitmask = instruction & 0b00000000000000111110000000000000;
+    unsigned int R3bitmask = ID.inst & 0b00000000000000111110000000000000;
     R3 = R3bitmask >> 13;
     // R3Value = registerFile[R3];
 
-    Shamt = instruction & 0b00000000000000000001111111111111;
+    Shamt = ID.inst & 0b00000000000000000001111111111111;
         
-    Imm  = instruction & 0b00000000000000111111111111111111;
+    Imm  = ID.inst & 0b00000000000000111111111111111111;
         
-    Address = instruction & 0b00001111111111111111111111111111;
+    Address = ID.inst & 0b00001111111111111111111111111111;
     
     switch(opcode)
     {
@@ -197,6 +215,8 @@ void decode(int instruction)
             Imm     = 0;
             Shamt   = 0;
             Address = 0;
+            ID.operands[0] = registerFile[R2];
+            ID.operands[1] = registerFile[R3];
             break;
         case 8:
         case 9:
@@ -204,6 +224,8 @@ void decode(int instruction)
             R3      = 0;
             Imm     = 0;
             Address = 0;
+            ID.operands[0] = registerFile[R2];
+            ID.operands[1] = registerFile[R3];
             break;
         case 3:
         case 4:
@@ -214,6 +236,8 @@ void decode(int instruction)
             R3      = 0;
             Shamt   = 0;
             Address = 0;
+            ID.operands[0] = registerFile[R2];
+            ID.operands[1] = IMM;
             break;
         case 7:
             // J-format
@@ -222,12 +246,13 @@ void decode(int instruction)
             R3    = 0;
             Imm   = 0;
             Shamt = 0;
+            ID.operands[1] = Address;
             break;
         default:
             break;    
 
     }
-    excute(opcode,R1,R2,R3,Shamt,Imm,Address);
+    execute(opcode,R1,R2,R3,Shamt,Imm,Address);
 
     printf("PC %i\n",pc);
     printf("Instruction %i\n",pc + 1);
@@ -243,19 +268,37 @@ void decode(int instruction)
     printf("value[Third Reg] = %i\n",registerFile[R3]);
     printf("---------- \n");
 
+    if (opcode == 11)
+    {    
+        printf("[");
+        for (int i = 0; i < 32; i++) {
+            printf("%d", registerFile[i]);
+            if (i < 32 - 1) {
+                printf(", ");
+            }
+        }
+        printf("]\n");
+
+    }
+    ID = IF;
     // excute(opcode,R1,R2,R3,Shamt,Imm,Address);
 }
 
 void fetch()
 {
     for(int i = 0; i < 12; i++){
-        int instruction = 0;
+        // int instruction = 0;
             
-        instruction = Memory_Array[pc];
-            
-        decode(instruction);
-        // printf("instruction:%d  pc:%d\n", instruction, pc);
+        // instruction = Memory_Array[pc];
+        IF = Memory_Array[pc];
+        decode();
         pc++;
+        // printf("instruction:%d  pc:%d\n", instruction, pc);
+        // while (pc < sizeof(Memory_Array) / sizeof(Memory_Array[0]))
+        // {
+        //     IF = Memory_Array[pc];
+        //     pc++;            
+        // }
         }
 }
 
@@ -422,6 +465,13 @@ int main()
     //     //printf("%s\n", instructions[i]);
     // }
 
+    // Initialize Pipeline stages
+    memset(&IF, 0, sizeof(Instruction));
+    memset(&ID, 0, sizeof(Instruction));
+    memset(&EX, 0, sizeof(Instruction));
+    memset(&MEM, 0, sizeof(Instruction));
+    memset(&WB, 0, sizeof(Instruction));
+
     for (int i = 0; i < 12; i++)
     {
         char *Final_inst; // string for each instruction in binary
@@ -516,12 +566,27 @@ int main()
 
             // printf("Final Binary Code Of The %d Instruction: %s\n\n", i + 1, Final_inst);
         } // 11000000000010000000000011000000
-        Memory_Array[i] = strtol(Final_inst, NULL, 2); // Convert binary string to integer directly
+        // Memory_Array[i] = strtol(Final_inst, NULL, 2); // Convert binary string to integer directly
+        // Convert binary string to an Instruction object and assign it to Memory_Array[i]
+        Instruction instruction;
+        instruction.inst = strtol(Final_inst, NULL, 2);
+        Memory_Array[i] = instruction;
+
         // printf("Instruction %d %d\n", i + 1, Memory_Array[i]);
         for (int j = 0; j < current_pos; j++) {
             free(Words_array[j]);
         }
     }
+
+    // Start simulation
+    // int clock_cycles = 0;
+    // while (WB.opcode == 0 || clock_cycles < 7 + ((12 - 1) * 2)) {
+    //     decode();
+    //     fetch();
+    //     clock_cycles++;
+    // }
+
+    // printf("Total clock cycles: %d\n", clock_cycles);
     
     fetch();
     

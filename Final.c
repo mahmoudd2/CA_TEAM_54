@@ -94,9 +94,10 @@ char *int_to_binary(int num, int num_bits, const char *type) {
 void writeback(int *decodedArray,int result)
 {
     int First_Reg;
-    if (decodedArray != NULL) {
+    int flag = 0;
+    if (decodedArray != NULL && decodedArray[1] != 0) {
         First_Reg = decodedArray[1];
-        if (First_Reg >= 0 && First_Reg < 32) {
+        if (First_Reg > 0 && First_Reg < 32) {
             registerFile[First_Reg] = result;
         } else {
             printf("Invalid register index: %d\n", First_Reg);
@@ -104,10 +105,8 @@ void writeback(int *decodedArray,int result)
     } else {
         printf("Writeback is not doing anything rn\n");
     }
-    registerFile[First_Reg] = result;
     // printf("operandddd: %d\n", WB.operands[0]);
     printf("WB: Writeback operation\n");
-
 }
 
 void memory(int *decodedArray,int result)

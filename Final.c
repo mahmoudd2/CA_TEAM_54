@@ -18,8 +18,7 @@ int Memory_Array[2048];
 
 int registerFile [32];
 // int Num_Inst = sizeof(Memory_Array)/sizeof(int);
-
-
+int *decodedArray;
 
 // Define the pipeline stages
 // Instruction IF, ID, EX, MEM, WB;
@@ -92,9 +91,19 @@ char *int_to_binary(int num, int num_bits, const char *type) {
     return binary;
 }
 
-void writeback(int *decodedarray,int result)
+void writeback(int *decodedArray,int result)
 {
-    int First_Reg = decodedarray[1];
+    int First_Reg;
+    if (decodedArray != NULL) {
+        First_Reg = decodedArray[1];
+        if (First_Reg >= 0 && First_Reg < 32) {
+            registerFile[First_Reg] = result;
+        } else {
+            printf("Invalid register index: %d\n", First_Reg);
+        }
+    } else {
+        printf("Decoded array is NULL\n");
+    }
     registerFile[First_Reg] = result;
     // printf("operandddd: %d\n", WB.operands[0]);
 
@@ -102,14 +111,21 @@ void writeback(int *decodedarray,int result)
 
 void memory(int *decodedArray,int result)
 {
-    if (decodedArray[0] == 10)
-    {
-        registerFile[decodedArray[1]] = Memory_Array[result];
+    if (decodedArray != NULL){
+        if (decodedArray[0] == 10)
+        {
+            registerFile[decodedArray[1]] = Memory_Array[result];
+        }
+        else if (decodedArray[0] == 11)
+        {
+            Memory_Array[result] = decodedArray[1];
+        }
     }
-    else if (decodedArray[0] == 11)
+    else
     {
-        Memory_Array[result] = decodedArray[1];
-    }
+        printf("Decoded array is NULL\n");
+    } 
+    
 }
 
 
@@ -176,9 +192,9 @@ int * decode(int instruction)
 {
     int *decodedArray = malloc(7 * sizeof(int));
     if (decodedArray == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
-        exit(1);
-    }    
+    fprintf(stderr, "Memory allocation failed\n");
+    exit(1);
+    }
     int opcode = 0;  // bits31:28
     int R1 = 0;      // bits27:23
     int R2 = 0;      // bit22:18
@@ -230,8 +246,16 @@ int * decode(int instruction)
     Address = instruction & 0b00001111111111111111111111111111;
     decodedArray[6] = Address;
 
+    // printf("[");
+    // for (int i = 0; i < sizeof(decodedArray); i++) {
+    //     printf("%d", decodedArray[i]);
+    //     if (i < sizeof(decodedArray) - 1) {
+    //         printf(", ");
+    //     }
+    // }
+    // printf("]\n");
 
-
+    
     return decodedArray;
 
 
@@ -341,8 +365,9 @@ int fetch()
     for(int i = 0; i < num_instructions; i++){
         int instruction = 0;  
         instruction = Memory_Array[pc];
+        int *temp = decode(instruction);
         pc++;
-        // printf("instruction:%d  pc:%d\n", instruction, pc);
+        printf("instruction:%d  pc:%d\n", instruction, pc);
         // while (pc < sizeof(Memory_Array) / sizeof(Memory_Array[0]))
         // {
         //     IF = Memory_Array[pc];
@@ -521,6 +546,11 @@ int main()
 
     for (int i = 0; i < num_instructions; i++)
     {
+        int *decodedArray = malloc(7 * sizeof(int));
+        if (decodedArray == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
+}
         char *Final_inst; // string for each instruction in binary
         char *type;
         int inst_length = strlen(instructions[i]);
@@ -630,13 +660,39 @@ int main()
             free(Words_array[j]);
         }
     }
-
-    int INST;
-    INST = fetch();
-    int *array = decode(INST);
-    int result = execute(array);
-    memory(array,result);
-    // printf("[");
+    int IF_NUM = 1;
+    int WB_NUM = 0;
+    while (IF_NUM != WB_NUM )
+    {
+        int result;
+        int INST;
+        printf("Clock Cycle: %d\n", clk);
+        if (clk % 2 == 1)
+        {
+            writeback(decodedArray,result);
+            WB_NUM++;
+        }
+        memory(decodedArray,result);
+        result = execute(decodedArray);
+        decodedArray = decode(INST);
+        
+        if (clk % 2 == 1)
+        {
+            INST = fetch();
+            IF_NUM++;
+        }
+        clk++;
+        printf("[");
+    }
+    //     for (int i = 0; i < sizeof(array); i++) {
+    //         printf("%d", array[i]);
+    //         if (i < sizeof(array) - 1) {
+    //             printf(", ");
+    //         }
+    //     }
+    //     printf("]\n");
+    // }
+    // // printf("[");
     // for (int i = 0; i < sizeof(array); i++) {
     //     printf("%d", array[i]);
     //     if (i < sizeof(array) - 1) {

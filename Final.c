@@ -81,22 +81,19 @@ void writeback(int *decodedArray,int result)
 
 void memory(int *incomingArray,int result)
 {
-    if (MEM_FLAG == 1 && (clk % 2 == 0))
-    {
-        if (incomingArray != NULL){
-            if (incomingArray[0] == 10)
-            {
-                registerFile[incomingArray[1]] = Memory_Array[result];
-            }
-            else if (incomingArray[0] == 11)
-            {
-                Memory_Array[result] = incomingArray[1];
-            }
-            if (MEM_INST <= num_instructions)
-            {
-                printf("MemoryAccess at Instruction number: %d\n",MEM_INST);
-                MEM_INST++;
-            }
+    if (incomingArray != NULL){
+        if (incomingArray[0] == 10)
+        {
+            registerFile[incomingArray[1]] = Memory_Array[result];
+        }
+        else if (incomingArray[0] == 11)
+        {
+            Memory_Array[result] = incomingArray[1];
+        }
+        if (MEM_INST <= num_instructions)
+        {
+            printf("MemoryAccess at Instruction number: %d\n",MEM_INST);
+            MEM_INST++;
         }
     }
 }
@@ -154,7 +151,7 @@ int execute(int *incomingArray)
             }
             if (Excute_Flag == 1)
             {
-                if (EXCUTE_INST <= num_instructions)
+                if (EXCUTE_INST < num_instructions)
                 {
                     printf("excuting instruction number: %d\n", EXCUTE_INST);
                 }
@@ -173,9 +170,7 @@ int execute(int *incomingArray)
                 EXCUTE_INST++;
                 MEM_FLAG = 1;
             }
-
         }
-
     }
     return result;
 

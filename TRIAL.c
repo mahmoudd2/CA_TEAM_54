@@ -68,27 +68,34 @@ char *int_to_binary(int num, int num_bits, const char *type) {
         fprintf(stderr, "Memory allocation failed\n");
         exit(1);
     }
+    for (int i = num_bits - 1; i >= 0; i--) { //num = 5   num_bits = 13 bit  i = 12 // 
+        if (num & (1 << i)) {
+            binary[num_bits - 1 - i] = '1'; // Set the bit to '1' if it's set in num
+        } else {
+            binary[num_bits - 1 - i] = '0'; // Set the bit to '0' if it's not set in num
+        }
+    }
 
-    if (strcmp(type, "IMM") == 0) { // 2's complement handling
-        if (num < 0) { // If negative, convert to 2's complement
-            num += (1 << num_bits); // num = -5 + (10000) = 11
-        }
-        for (int i = num_bits - 1; i >= 0; i--) {
-            if (num & (1 << i)) {
-                binary[num_bits - 1 - i] = '1'; // Set the bit to '1' if it's set in num
-            } else {
-                binary[num_bits - 1 - i] = '0'; // Set the bit to '0' if it's not set in num
-            }
-        }
-    } else { // Normal positive number handling
-        for (int i = num_bits - 1; i >= 0; i--) { //num = 5   num_bits = 13 bit  i = 12 // 
-            if (num & (1 << i)) {
-                binary[num_bits - 1 - i] = '1'; // Set the bit to '1' if it's set in num
-            } else {
-                binary[num_bits - 1 - i] = '0'; // Set the bit to '0' if it's not set in num
-            }
-        }
-    }        
+    // if (strcmp(type, "IMM") == 0) { // 2's complement handling
+    //     if (num < 0) { // If negative, convert to 2's complement
+    //         num += (1 << num_bits); // num = -5 + (10000) = 11
+    //     }
+    //     for (int i = num_bits - 1; i >= 0; i--) {
+    //         if (num & (1 << i)) {
+    //             binary[num_bits - 1 - i] = '1'; // Set the bit to '1' if it's set in num
+    //         } else {
+    //             binary[num_bits - 1 - i] = '0'; // Set the bit to '0' if it's not set in num
+    //         }
+    //     }
+    // } else { // Normal positive number handling
+    //     for (int i = num_bits - 1; i >= 0; i--) { //num = 5   num_bits = 13 bit  i = 12 // 
+    //         if (num & (1 << i)) {
+    //             binary[num_bits - 1 - i] = '1'; // Set the bit to '1' if it's set in num
+    //         } else {
+    //             binary[num_bits - 1 - i] = '0'; // Set the bit to '0' if it's not set in num
+    //         }
+    //     }
+    // }        
     binary[num_bits] = '\0'; // Null-terminate the string
 
     return binary;
@@ -272,12 +279,15 @@ void decode()
         OutgoingArray[4] = Shamt;  
 
         Imm  = instruction & 0b00000000000000111111111111111111;
-        sign_bit = (instruction & 0b100000000000000000) >> 17;
+        print
+        sign_bit = (Imm & 0b00000000000000100000000000000000) >> 17;
+        printf("signn bit: %d\n",sign_bit);
+
         if (sign_bit == 1)
         {
             Imm = Imm | 0b11111111111111000000000000000000;
         }
-        // printf("Imm: %d\n",Imm);
+        printf("Imm: %d\n",Imm);
 
 
         OutgoingArray[5] = Imm;    
@@ -499,7 +509,7 @@ int main()
         if (decodedArray == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
         exit(1);
-}
+    }
         char *Final_inst; // string for each instruction in binary
         char *type;
         int inst_length = strlen(instructions[i]);
@@ -596,6 +606,7 @@ int main()
             char *IMM = Words_array[2];
             int num3 = atoi(IMM);
             IMM = int_to_binary(num3,18,"IMM");
+            printf("IMM in encode:%d\n",atoi(IMM));
             Final_inst = concatenate_I_Format(First_reg, Sec_reg, IMM, Final_inst);
 
             // printf("Final Binary Code Of The %d Instruction: %s\n\n", i + 1, Final_inst);
@@ -669,6 +680,8 @@ int main()
     // for (int i = 0; i < 32; i++) {
     //     free(registerFile[i]);
     // }    
+    char * numberrr = int_to_binary(-5,18," ");
+    printf("NUMBER: %s",numberrr);
     return 0;
     
 }

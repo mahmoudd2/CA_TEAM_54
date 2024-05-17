@@ -10,7 +10,8 @@
 typedef struct {
     int Fetch_Inst;
     int dest_reg;    // Destination register for write-back
-    int result;      // Result from the execute stage
+    int result;
+    int opcode;      // Result from the execute stage
 } PipelineStage;
 
 PipelineStage pipeline[PIPELINE_DEPTH];
@@ -21,6 +22,7 @@ void init_pipeline() {
         pipeline[i].Fetch_Inst = 0;
         pipeline[i].dest_reg = -1;
         pipeline[i].result = 0;
+        pipeline[i].opcode = -1;
     }
 }
 
@@ -31,6 +33,7 @@ void shift_pipeline() {
         pipeline[i].Fetch_Inst = pipeline[i - 1].Fetch_Inst;
         pipeline[i].dest_reg = pipeline[i - 1].dest_reg;
         pipeline[i].result = pipeline[i - 1].result;
+        pipeline[i].opcode = pipeline[i - 1].opcode;
     }
 }
 
@@ -42,7 +45,7 @@ int registerFile [32];
 int *decodedArray = NULL;
 // int FETCH_INST;
 int result_reg;
-
+int mem_opcode;
 int clk = 1;
 int pc = 0;
 int WB_NUM = -3;
@@ -129,18 +132,25 @@ void writeback()
 }
 
 void memory() {
-    if (MEM_FLAG == 1 && (clk % 2 == 0)) {
-        if (decodedArray != NULL) {
-            if (decodedArray[0] == 10) {
-                registerFile[pipeline[3].dest_reg] = Memory_Array[pipeline[3].result];
-            } else if (decodedArray[0] == 11) {
-                Memory_Array[pipeline[3].result] = registerFile[pipeline[3].dest_reg];
+    if (clk % 2 == 0)
+    {
+        if (MEM_FLAG == 1) {
+            int temp_opcode = pipeline[3].opcode;
+            printf("Opcode in memory: %d\n",temp_opcode);
+            if (temp_opcode != -1) {
+                if (temp_opcode == 10) {
+                    registerFile[pipeline[3].dest_reg] = Memory_Array[pipeline[3].result];
+                    printf("MEM: dest_reg: %d .... result: %d\n ",pipeline[3].dest_reg,pipeline[3].result);
+                } else if (temp_opcode == 11) {
+                    Memory_Array[pipeline[3].result] = registerFile[pipeline[3].dest_reg];
+                    printf("MEM at index %d is changed to: %d\n ",pipeline[3].result,registerFile[pipeline[3].dest_reg]);
+                }
             }
-        }
-        if (MEM_INST <= num_instructions) {
-            printf("Memory Access At Instruction Number: %d\n", MEM_INST);
-            MEM_INST++;
-            WB_FLAG = 1;
+            if (MEM_INST <= num_instructions) {
+                printf("Memory Access At Instruction Number: %d\n", MEM_INST);
+                MEM_INST++;
+                WB_FLAG = 1;
+            }
         }
     }
 }
@@ -207,6 +217,9 @@ void execute()
                 pipeline[2].result = result;
                 // printf("excute result in excute: %d\n",pipeline[2].result);
                 result_reg = pipeline[2].dest_reg; 
+                mem_opcode = pipeline[2].opcode;
+                printf("excute opcode: %d\n",pipeline[2].opcode);
+
                 // printf("excute destination register in excute: %d\n",pipeline[2].dest_reg);
             }
         }
@@ -223,7 +236,8 @@ void execute()
                 pipeline[2].result = FINAL_RESULT;
                 // printf("excute result in excute: %d\n",pipeline[2].result);
                 pipeline[2].dest_reg = result_reg;
-                // printf("excute destination register in excute: %d\n",pipeline[2].dest_reg);
+                pipeline[2].opcode = mem_opcode;
+                printf("excute opcode: %d\n",pipeline[2].opcode);
             }
         }
     }
@@ -232,6 +246,8 @@ void execute()
 void decode()
 {
     int instruction = pipeline[1].Fetch_Inst;
+    // printf("instruction: %d\n",instruction);
+
     int *OutgoingArray = malloc(7 * sizeof(int));
     if (OutgoingArray == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
@@ -239,12 +255,13 @@ void decode()
     }
     if (clk % 2 == 0)
     {
+
         int opcode = 0;  // bits31:28
         int R1 = 0;      // bits27:23
         int R2 = 0;      // bit22:18
         int R3 = 0;      // bits17:13
         unsigned int Shamt = 0;   // bits12:0
-        signed int Imm = 0;     // bits17:0
+        int Imm = 0;     // bits17:0
         int Address = 0; // bits27:0
         int sign_bit = 0;
         
@@ -271,25 +288,29 @@ void decode()
         Shamt = instruction & 0b00000000000000000001111111111111;
         OutgoingArray[4] = Shamt;  
 
+        printf("instruction before imm : %d\n",instruction);
         Imm  = instruction & 0b00000000000000111111111111111111;
+        printf("IMm instruction: %s\n",int_to_binary(Imm,18,"I"));
         sign_bit = (instruction & 0b100000000000000000) >> 17;
-        if (sign_bit == 1)
+        if (sign_bit == 0b1)
         {
             Imm = Imm | 0b11111111111111000000000000000000;
         }
-        // printf("Imm: %d\n",Imm);
+        printf("Imm: %d\n",Imm);
 
 
         OutgoingArray[5] = Imm;    
         Address = instruction & 0b00001111111111111111111111111111;
         OutgoingArray[6] = Address;
         decodedArray = OutgoingArray;
-
+        printf("IMM VALUE IN DECODE %d\n",OutgoingArray[5]);
         if (instruction != 0 && (DECODE_INST <= num_instructions)) // deh kanet moshkela el fe clock cycle 16
         {
             printf("Decoding instruction number %d with code : %d\n",DECODE_INST , instruction);
             pipeline[1].dest_reg = decodedArray[1];
-            // printf("Pipeline decode stage dest_reg set to: %d\n", pipeline[1].dest_reg);
+            pipeline[1].opcode = decodedArray[0];
+            // mem_opcode = decodedArray[0];
+            // printf("Pipeline decode stage opcode set to: %d\n", pipeline[1].opcode);
         }
     }
     else 
@@ -300,8 +321,9 @@ void decode()
             {
                 pipeline[1].dest_reg = decodedArray[1]; 
                 printf("Decoding instruction number %d with code : %d\n",DECODE_INST , instruction);
+                pipeline[1].opcode = decodedArray[0];
 
-                // printf("Pipeline decode stage dest_reg set to: %d\n", pipeline[1].dest_reg);
+                // printf("Pipeline decode stage opcode set to: %d\n", pipeline[1].opcode);
                 DECODE_INST++;
             }
             Excute_Flag = 1;
@@ -583,19 +605,23 @@ int main()
             int num1 = atoi(First_reg);
             First_reg = int_to_binary(num1,5,"Reg");
             char *Sec_reg;
+            char *IMM;
             if (strcmp (Words_array[0], "MOVI") == 0)
             {
                 Sec_reg = "00000";
+                IMM = Words_array[2];
+                int num3 = atoi(IMM);
+                IMM = int_to_binary(num3,18,"IMM");
             }
             else
             {
-                Sec_reg = Words_array[1]+1;
+                Sec_reg = Words_array[2]+1;
                 int num2 = atoi(Sec_reg);
                 Sec_reg = int_to_binary(num2,5,"Reg");
+                IMM = Words_array[3];
+                int num3 = atoi(IMM);
+                IMM = int_to_binary(num3,18,"IMM");
             }
-            char *IMM = Words_array[2];
-            int num3 = atoi(IMM);
-            IMM = int_to_binary(num3,18,"IMM");
             Final_inst = concatenate_I_Format(First_reg, Sec_reg, IMM, Final_inst);
 
             // printf("Final Binary Code Of The %d Instruction: %s\n\n", i + 1, Final_inst);
@@ -655,10 +681,10 @@ int main()
     }
     printf("]\n");
     
-    // // printf("[");
-    // for (int i = 0; i < sizeof(array); i++) {
-    //     printf("%d", array[i]);
-    //     if (i < sizeof(array) - 1) {
+    // printf("[");
+    // for (int i = 0; i < sizeof(Memory_Array); i++) {
+    //     printf("%d", Memory_Array[i]);
+    //     if (i < sizeof(Memory_Array) - 1) {
     //         printf(", ");
     //     }
     // }

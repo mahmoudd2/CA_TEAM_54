@@ -136,14 +136,16 @@ void memory() {
     {
         if (MEM_FLAG == 1) {
             int temp_opcode = pipeline[3].opcode;
+            int temp_result = pipeline[3].result;
+            int temp_reg = pipeline[3].dest_reg;
             printf("Opcode in memory: %d\n",temp_opcode);
             if (temp_opcode != -1) {
                 if (temp_opcode == 10) {
-                    registerFile[pipeline[3].dest_reg] = Memory_Array[pipeline[3].result];
-                    printf("MEM: dest_reg: %d .... result: %d\n ",pipeline[3].dest_reg,pipeline[3].result);
+                    printf("MEM: dest_reg: %d .... result: %d\n ",temp_reg,Memory_Array[temp_result]);
+                    registerFile[temp_reg] = Memory_Array[temp_result];
                 } else if (temp_opcode == 11) {
-                    Memory_Array[pipeline[3].result] = registerFile[pipeline[3].dest_reg];
-                    printf("MEM at index %d is changed to: %d\n ",pipeline[3].result,registerFile[pipeline[3].dest_reg]);
+                    Memory_Array[temp_result] = registerFile[temp_reg];
+                    printf("MEM at index %d is changed to: %d\n ",temp_result,registerFile[temp_reg]);
                 }
             }
             if (MEM_INST <= num_instructions) {
@@ -288,22 +290,18 @@ void decode()
         Shamt = instruction & 0b00000000000000000001111111111111;
         OutgoingArray[4] = Shamt;  
 
-        printf("instruction before imm : %d\n",instruction);
         Imm  = instruction & 0b00000000000000111111111111111111;
-        printf("IMm instruction: %s\n",int_to_binary(Imm,18,"I"));
         sign_bit = (instruction & 0b100000000000000000) >> 17;
         if (sign_bit == 0b1)
         {
             Imm = Imm | 0b11111111111111000000000000000000;
         }
-        printf("Imm: %d\n",Imm);
 
 
         OutgoingArray[5] = Imm;    
         Address = instruction & 0b00001111111111111111111111111111;
         OutgoingArray[6] = Address;
         decodedArray = OutgoingArray;
-        printf("IMM VALUE IN DECODE %d\n",OutgoingArray[5]);
         if (instruction != 0 && (DECODE_INST <= num_instructions)) // deh kanet moshkela el fe clock cycle 16
         {
             printf("Decoding instruction number %d with code : %d\n",DECODE_INST , instruction);
@@ -634,6 +632,9 @@ int main()
         for (int j = 0; j < current_pos; j++) {
             free(Words_array[j]);
         }
+        // for (int j = 0; j < sizeof(Memory_Array); j++) {
+        //     free(Memory_Array[j]);
+        // }
     }
     // memset(Memory_Array, 0, sizeof(Memory_Array));
     // memset(registerFile, 0, sizeof(registerFile));
@@ -665,10 +666,11 @@ int main()
         
     }
     
-
+    // int temppp = Memory_Array[1025];
+    // printf("%d\n",temppp);
     // for (int i = 0; i < 2048; i++) {
     //     Memory_Array[i] = 0;
-    // }
+    //}
     // for (int i = 0; i < 32; i++) {
     //     registerFile[i] = 0;
     // }
@@ -682,9 +684,9 @@ int main()
     printf("]\n");
     
     // printf("[");
-    // for (int i = 0; i < sizeof(Memory_Array); i++) {
+    // for (int i = 0; i < 2048; i++) {
     //     printf("%d", Memory_Array[i]);
-    //     if (i < sizeof(Memory_Array) - 1) {
+    //     if (i < 2048 - 1) {
     //         printf(", ");
     //     }
     // }

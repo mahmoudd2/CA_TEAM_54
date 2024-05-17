@@ -16,9 +16,9 @@ int *decodedArray = NULL;
 
 int clk = 1;
 int pc = 0;
+int WB_NUM = -3;
 
-int FETCH_NUM = 0 ;
-int FETCH_INST;
+int FETCH_INST = 0;
 
 int DECODE_INST = 1;
 
@@ -27,6 +27,9 @@ int Excute_Flag = 0;
 
 int MEM_INST = 1;
 int MEM_FLAG = 0;
+
+int WB_INST = 1;
+int WB_FLAG = 0;
 
 
 char *int_to_binary(int num, int num_bits, const char *type) {
@@ -62,102 +65,123 @@ char *int_to_binary(int num, int num_bits, const char *type) {
     return binary;
 }
 
-void writeback(int *decodedArray,int result)
+void writeback()
 {
-    int First_Reg;
-    int flag = 0;
-    if (decodedArray != NULL && decodedArray[1] != 0) {
-        First_Reg = decodedArray[1];
-        if (First_Reg > 0 && First_Reg < 32) {
-            registerFile[First_Reg] = result;
-            printf("Writing back at instruction number: %d\n",FETCH_INST);            
-        } 
-        else 
+    if (WB_FLAG == 1 && (clk % 2 == 1))
+    {
+        int First_Reg;
+        if (WB_INST <= num_instructions)
         {
-            printf("Invalid register index: %d\n", First_Reg);
+            printf("Writing back at instruction number: %d\n",WB_INST);
+            WB_INST++;
         }
+        if (decodedArray != NULL && decodedArray[1] != 0) 
+        {
+            First_Reg = decodedArray[1];
+            if (First_Reg > 0 && First_Reg < 32) 
+            {
+                registerFile[First_Reg] = FINAL_RESULT;
+                printf("Register Number: %d is changed to %d\n",First_Reg,FINAL_RESULT);                            
+            } 
+            else 
+            {
+                printf("Invalid register index: %d\n", First_Reg);
+            }
+        }
+
+
     }
+    if (clk % 2 == 1)
+    {
+        WB_NUM++;
+    }
+    
+
 }
 
 void memory(int *incomingArray,int result)
 {
-    if (incomingArray != NULL){
-        if (incomingArray[0] == 10)
-        {
-            registerFile[incomingArray[1]] = Memory_Array[result];
-        }
-        else if (incomingArray[0] == 11)
-        {
-            Memory_Array[result] = incomingArray[1];
+    if (MEM_FLAG == 1 && (clk % 2 == 0))
+    {
+        if (incomingArray != NULL){
+            if (incomingArray[0] == 10)
+            {
+                registerFile[incomingArray[1]] = Memory_Array[result];
+            }
+            else if (incomingArray[0] == 11)
+            {
+                Memory_Array[result] = incomingArray[1];
+            }
         }
         if (MEM_INST <= num_instructions)
-        {
-            printf("MemoryAccess at Instruction number: %d\n",MEM_INST);
-            MEM_INST++;
-        }
+            {
+                printf("Memory Access At Instruction Number: %d\n",MEM_INST);
+                MEM_INST++;
+                WB_FLAG = 1;
+            }
+    
     }
 }
 
 
-int execute(int *incomingArray)
+void execute()
 {
     int result = 0;
     if (clk % 2 == 0)
     {
-        if (incomingArray != NULL){
-            switch (incomingArray[0])
+        if (decodedArray != NULL && Excute_Flag == 1){
+            switch (decodedArray[0])
             {
             case 0:
-                result = incomingArray[2] + incomingArray[3];
+                result = registerFile[decodedArray[2]] + registerFile[decodedArray[3]];
                 break;
             case 1:
-                result = incomingArray[2] - incomingArray[3];
+                result = registerFile[decodedArray[2]] - registerFile[decodedArray[3]];
                 break;
             case 2:
-                result = incomingArray[2] * incomingArray[3];
+                result = registerFile[decodedArray[2]] * registerFile[decodedArray[3]];
                 break;
             case 3:
-                result = incomingArray[5];
+                result = decodedArray[5]; //dh imm
                 break;
             case 4:
-                if(incomingArray[1] == incomingArray[2])
+                if(registerFile[decodedArray[1]] == registerFile[decodedArray[2]])
                 {
-                    pc = pc + 1 + incomingArray[5];
+                    pc = pc + decodedArray[5]; // deh ana msh 3aref ehna mfrod nsebha pc + 1 wala pc + imm 3ltol
                 }
                 break;
             case 5:
-                result = incomingArray[2] & incomingArray[3];
+                result = registerFile[decodedArray[2]] & registerFile[decodedArray[3]];
                 break;
             case 6:
-                result = incomingArray[2] ^ incomingArray[5]; // ^ deh 3lamet el XOR fe C
+                result = registerFile[decodedArray[2]] ^ decodedArray[5]; // ^ deh 3lamet el XOR fe C
                 break;
             case 7:
                 int temp = (pc & 0b11110000000000000000000000000000) >> 28;
-                pc = temp | incomingArray[6];
+                pc = temp | decodedArray[6];
                 // printf("PC: %d\n",pc);
                 break;
             case 8:
-                result = incomingArray[2] << incomingArray[4];
+                result = registerFile[decodedArray[2]] << decodedArray[4];
                 break;
             case 9:
-                result = incomingArray[2] >> incomingArray[4];
+                result = registerFile[decodedArray[2]] >> decodedArray[4];
                 break;
             case 10:
             case 11:
-                result = incomingArray[2] + incomingArray[5];
+                result = registerFile[decodedArray[2]] + decodedArray[5];
                 break;
             default:
                 break;
             }
-            if (Excute_Flag == 1)
+        
+            if (EXCUTE_INST <= num_instructions)
             {
-                if (EXCUTE_INST < num_instructions)
-                {
-                    printf("excuting instruction number: %d\n", EXCUTE_INST);
-                }
+                printf("excuting instruction number: %d\n", EXCUTE_INST);
             }
             
         }
+        FINAL_RESULT = result;
     }
     else
     {   
@@ -165,18 +189,16 @@ int execute(int *incomingArray)
         {
             if (EXCUTE_INST <= num_instructions)
             {
-                result = FINAL_RESULT;
                 printf("excuting instruction number: %d\n", EXCUTE_INST);
                 EXCUTE_INST++;
                 MEM_FLAG = 1;
             }
+
         }
     }
-    return result;
-
 }
 
-int * decode(int instruction)
+void decode(int instruction)
 {
     int *OutgoingArray = malloc(7 * sizeof(int));
     if (OutgoingArray == NULL) {
@@ -230,37 +252,22 @@ int * decode(int instruction)
         Address = instruction & 0b00001111111111111111111111111111;
         OutgoingArray[6] = Address;
 
-        if (instruction != 0 && (DECODE_INST < num_instructions))
+        if (instruction != 0 && (DECODE_INST <= num_instructions)) // deh kanet moshkela el fe clock cycle 16
         {
             printf("Decoding instruction number: %d\n",DECODE_INST);
-            return OutgoingArray;
-        }
-        else
-        {
-            return NULL;
+            decodedArray = OutgoingArray;
         }
     }
     else 
     {
-        OutgoingArray = decodedArray;
         if (instruction != 0)
         {
-            if (DECODE_INST < num_instructions)
-            {
-                printf("Decoding instruction number: %d\n",DECODE_INST);
-                DECODE_INST++;
-            }
-            else if (DECODE_INST == num_instructions)
+            if (DECODE_INST <= num_instructions)
             {
                 printf("Decoding instruction number: %d\n",DECODE_INST);
                 DECODE_INST++;
             }
             Excute_Flag = 1;
-            return OutgoingArray;
-        }
-        else
-        {
-            return NULL;
         }
     }
 
@@ -268,21 +275,20 @@ int * decode(int instruction)
 
 int fetch()
 {
-    FETCH_INST++;
-    if(pc < num_instructions){
+    if(pc < num_instructions && (clk % 2 == 1)){
         int instruction = Memory_Array[pc];
-        printf("PC: %d \nFetching instruction number %d with code: %d\n", pc, FETCH_INST, instruction);        
+        printf("Fetching instruction number %d with code: %d\n", FETCH_INST + 1, instruction);        
+        FETCH_INST++;
         pc++;
-        FETCH_NUM++;
+        printf("PC in fetch: %d & FETCH NUM: %d\n",pc , FETCH_INST);
         return instruction;
-
     }
     else
     {
-        printf("End of program reached.\n");
+        // printf("End of program reached.\n");
         return -1; // End of program
     }
-
+    
     
 }
 
@@ -564,44 +570,45 @@ int main()
             free(Words_array[j]);
         }
     }
-
-    int WB_NUM = -3;
+    
     while (num_instructions != WB_NUM )
-    {
+    {   
+        printf("PC :%d\n", pc);
         int INST;
         printf("Clock Cycle: %d\n\n", clk);
         
-        if (clk % 2 == 1)
-        {
-            writeback(decodedArray,FINAL_RESULT);
-            WB_NUM++;
-        }
-        
+
+        writeback();
+        // WB_NUM++;
+
         memory(decodedArray,FINAL_RESULT);
-
-        FINAL_RESULT = execute(decodedArray);
-        decodedArray = decode(INST);
+    
+        execute();
+        decode(INST);
         
-        if (clk % 2 == 1)
-        {
-            INST = fetch();
-           
-            printf("Fetch Count: %d\n",FETCH_NUM);
-            printf("INST: %d\n\n",INST);
-
-        }
+        INST = fetch();       
+        // printf("Fetch Count: %d\n",FETCH_INST);
+        //printf("INST: %d\n\n",INST);
         clk++;
+        
     }
-    // printf("[");
+    
 
-    //     for (int i = 0; i < sizeof(array); i++) {
-    //         printf("%d", array[i]);
-    //         if (i < sizeof(array) - 1) {
-    //             printf(", ");
-    //         }
-    //     }
-    //     printf("]\n");
+    // for (int i = 0; i < 2048; i++) {
+    //     Memory_Array[i] = 0;
     // }
+    // for (int i = 0; i < 32; i++) {
+    //     registerFile[i] = 0;
+    // }
+    // printf("[");
+    // for (int i = 0; i < 32; i++) {
+    //     printf("%d", registerFile[i]);
+    //     if (i < 32 - 1) {
+    //         printf(", ");
+    //     }
+    // }
+    // printf("]\n");
+    
     // // printf("[");
     // for (int i = 0; i < sizeof(array); i++) {
     //     printf("%d", array[i]);
@@ -610,7 +617,12 @@ int main()
     //     }
     // }
     // printf("]\n");
-
+    // for (int i = 0; i < 2048; i++) {
+    //     free(Memory_Array[i]);
+    // }
+    // for (int i = 0; i < 32; i++) {
+    //     free(registerFile[i]);
+    // }    
     return 0;
     
 }

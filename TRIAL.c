@@ -301,6 +301,7 @@ void decode(int instruction)
             Excute_Flag = 1;
         }
     }
+    shift_pipeline();
 
 }
 
@@ -624,7 +625,7 @@ int main()
         // {
         //     shift_pipeline();
         // } 
-        shift_pipeline();
+        // shift_pipeline();
         // printf("Fetch Count: %d\n",FETCH_INST);
         //printf("INST: %d\n\n",INST);
         clk++;

@@ -114,8 +114,6 @@ void writeback()
         {
             printf("Invalid register index: %d\n", First_Reg);
         }
-    
-
 
     }
     if (clk % 2 == 1)
@@ -199,12 +197,13 @@ void execute()
             {
                 printf("excuting instruction number: %d\n", EXCUTE_INST);
             }
-            
-        }
-        FINAL_RESULT = result;
-        if (pipeline[2].dest_reg != -1) 
-        {
-            pipeline[2].result = result;
+            FINAL_RESULT = result;
+            if (pipeline[2].dest_reg != -1) 
+            {
+                pipeline[2].result = result;
+                printf("excute result in excute: %d\n",pipeline[2].result);
+                printf("excute destination register in excute: %d\n",pipeline[2].dest_reg);
+            }
         }
     }
     else
@@ -216,8 +215,10 @@ void execute()
                 printf("excuting instruction number: %d\n", EXCUTE_INST);
                 EXCUTE_INST++;
                 MEM_FLAG = 1;
+                pipeline[2].result = FINAL_RESULT;
+                printf("excute result in excute: %d\n",pipeline[2].result);
+                printf("excute destination register in excute: %d\n",pipeline[2].dest_reg);
             }
-
         }
     }
 }
@@ -278,9 +279,10 @@ void decode(int instruction)
 
         if (instruction != 0 && (DECODE_INST <= num_instructions)) // deh kanet moshkela el fe clock cycle 16
         {
-            printf("Decoding instruction number: %d\n",DECODE_INST);
+            printf("Decoding instruction number: %d with code : %d\n",DECODE_INST , instruction);
             decodedArray = OutgoingArray;
             pipeline[1].dest_reg = R1; 
+            result_reg = R1;
             printf("Pipeline decode stage dest_reg set to: %d\n", pipeline[1].dest_reg);
         }
     }
@@ -290,6 +292,9 @@ void decode(int instruction)
         {
             if (DECODE_INST <= num_instructions)
             {
+                pipeline[1].dest_reg = result_reg; 
+                printf("Pipeline decode stage dest_reg set to: %d\n", pipeline[1].dest_reg);
+
                 printf("Decoding instruction number: %d\n",DECODE_INST);
                 DECODE_INST++;
             }
@@ -614,9 +619,12 @@ int main()
         execute();
         decode(INST);
         
-        INST = fetch();  
+        INST = fetch(); 
+        // if (clk != 1)
+        // {
+        //     shift_pipeline();
+        // } 
         shift_pipeline();
-     
         // printf("Fetch Count: %d\n",FETCH_INST);
         //printf("INST: %d\n\n",INST);
         clk++;

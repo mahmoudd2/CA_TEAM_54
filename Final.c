@@ -6,6 +6,7 @@
 #define RED "\033[1;31m"
 #define RESET "\033[0m"
 #define BLUE "\033[1;34m"
+
 #define PIPELINE_DEPTH 5 // Number of pipeline stages
 
 typedef struct {
@@ -40,9 +41,10 @@ void shift_pipeline() {
 
 int num_instructions = 0;
 int FINAL_RESULT;
-int Memory_Array[2048];
 
+int Memory_Array[2048];
 int registerFile [32];
+
 int *decodedArray = NULL;
 // int FETCH_INST;
 int result_reg;
@@ -314,7 +316,6 @@ void decode()
             Imm = Imm | 0b11111111111111000000000000000000;
         }
 
-
         OutgoingArray[5] = Imm;    
         Address = instruction & 0b00001111111111111111111111111111;
         OutgoingArray[6] = Address;
@@ -352,7 +353,6 @@ void decode()
 
 void fetch()
 {
-
     if(pc < num_instructions && (clk % 2 == 1)){
         int instruction = Memory_Array[pc];
         printf(BLUE "Fetching instruction number %d from the Memory with value: %d\n" RESET, FETCH_INST + 1, instruction);        
@@ -365,13 +365,6 @@ void fetch()
     {
         printf(RED "Finished Fetching All Instructions\n" RESET);
     }
-    
-    // else
-    // {
-    //     // printf("End of program reached.\n");
-    //     return -1; // End of program
-    // }
-    
     
 }
 
@@ -541,9 +534,9 @@ int main()
     {
         int *decodedArray = malloc(7 * sizeof(int));
         if (decodedArray == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
-        exit(1);
-}
+            fprintf(stderr, "Memory allocation failed\n");
+            exit(1);
+        }
         char *Final_inst; // string for each instruction in binary
         char *type;
         int inst_length = strlen(instructions[i]);
@@ -569,12 +562,6 @@ int main()
             // Get the next token
             token = strtok(NULL, " ");
         }
-
-            // for(int j = 0; j < current_pos; j++)
-            // {
-            //     // printf("Token %d of instruction %d: %s\n",j+1, i + 1,Words_array[j]);
-            // }      EHNA MSH MEHTAGEN EL FOR LOOP DEH
-            
         Final_inst = opcode_to_binary(Words_array[0]);
         // printf("Binary Opcode of the %d instruction: %s\n", i+1, Final_inst);
         type = Type_opcode(Words_array[0]);

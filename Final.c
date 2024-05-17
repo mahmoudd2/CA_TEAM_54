@@ -672,7 +672,7 @@ int main()
     // for (int i = 0; i < 32; i++) {
     //     registerFile[i] = 0;
     // }
-    printf("\n[");
+    printf("\nRegisters Array:[");
     for (int i = 0; i < 32; i++) {
         printf("%d", registerFile[i]);
         if (i < 32 - 1) {
@@ -681,13 +681,13 @@ int main()
     }
     printf("]\n");
     
-    // printf("[");
-    // for (int i = 0; i < 2048; i++) {
-    //     printf("%d", Memory_Array[i]);
-    //     if (i < 2048 - 1) {
-    //         printf(", ");
-    //     }
-    // }
+    printf("\nMemory Array:[");
+    for (int i = 0; i < 2048; i++) {
+        printf("%d", Memory_Array[i]);
+        if (i < 2048 - 1) {
+            printf(", ");
+        }
+    }
     // printf("]\n");
     // for (int i = 0; i < 2048; i++) {
     //     free(Memory_Array[i]);

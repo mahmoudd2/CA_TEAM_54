@@ -647,8 +647,7 @@ int main()
         //     free(Memory_Array[j]);
         // }
     }
-    // memset(Memory_Array, 0, sizeof(Memory_Array));
-    // memset(registerFile, 0, sizeof(registerFile));
+
     init_pipeline();
     while (num_instructions != WB_NUM )
     {   

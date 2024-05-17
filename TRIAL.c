@@ -8,6 +8,7 @@
 #define PIPELINE_DEPTH 5 // Number of pipeline stages
 
 typedef struct {
+    int Fetch_Inst;
     int dest_reg;    // Destination register for write-back
     int result;      // Result from the execute stage
 } PipelineStage;
@@ -17,6 +18,7 @@ PipelineStage pipeline[PIPELINE_DEPTH];
 // Initialize the pipeline stages
 void init_pipeline() {
     for (int i = 0; i < PIPELINE_DEPTH; i++) {
+        pipeline[i].Fetch_Inst = 0;
         pipeline[i].dest_reg = -1;
         pipeline[i].result = 0;
     }
@@ -24,10 +26,12 @@ void init_pipeline() {
 
 // Function to shift the pipeline stages
 void shift_pipeline() {
-    for (int i = PIPELINE_DEPTH - 1; i > 0; i--) {
-        pipeline[i] = pipeline[i - 1];
+  // Shift results and destination registers one position
+    for (int i = 4; i > 0; i--) {
+        pipeline[i].Fetch_Inst = pipeline[i - 1].Fetch_Inst;
+        pipeline[i].dest_reg = pipeline[i - 1].dest_reg;
+        pipeline[i].result = pipeline[i - 1].result;
     }
-    pipeline[0].dest_reg = -1; // Reset the fetch stage
 }
 
 int num_instructions = 0;
@@ -36,7 +40,7 @@ int Memory_Array[2048];
 
 int registerFile [32];
 int *decodedArray = NULL;
-
+// int FETCH_INST;
 int result_reg;
 
 int clk = 1;
@@ -103,7 +107,7 @@ void writeback()
         } 
     
         First_Reg = pipeline[4].dest_reg;
-        printf("reg: %d\n",First_Reg);
+        // printf("reg: %d\n",First_Reg);
         result = pipeline[4].result;
         if (First_Reg > 0 && First_Reg < 32) 
         {
@@ -198,10 +202,11 @@ void execute()
                 printf("excuting instruction number: %d\n", EXCUTE_INST);
             }
             FINAL_RESULT = result;
-            if (pipeline[2].dest_reg != -1) 
+            if (pipeline[2].Fetch_Inst != -1) 
             {
                 pipeline[2].result = result;
                 printf("excute result in excute: %d\n",pipeline[2].result);
+                result_reg = pipeline[2].dest_reg; 
                 printf("excute destination register in excute: %d\n",pipeline[2].dest_reg);
             }
         }
@@ -217,14 +222,16 @@ void execute()
                 MEM_FLAG = 1;
                 pipeline[2].result = FINAL_RESULT;
                 printf("excute result in excute: %d\n",pipeline[2].result);
+                pipeline[2].dest_reg = result_reg;
                 printf("excute destination register in excute: %d\n",pipeline[2].dest_reg);
             }
         }
     }
 }
 
-void decode(int instruction)
+void decode()
 {
+    int instruction = pipeline[1].Fetch_Inst;
     int *OutgoingArray = malloc(7 * sizeof(int));
     if (OutgoingArray == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
@@ -276,13 +283,12 @@ void decode(int instruction)
         OutgoingArray[5] = Imm;    
         Address = instruction & 0b00001111111111111111111111111111;
         OutgoingArray[6] = Address;
+        decodedArray = OutgoingArray;
 
         if (instruction != 0 && (DECODE_INST <= num_instructions)) // deh kanet moshkela el fe clock cycle 16
         {
-            printf("Decoding instruction number: %d with code : %d\n",DECODE_INST , instruction);
-            decodedArray = OutgoingArray;
-            pipeline[1].dest_reg = R1; 
-            result_reg = R1;
+            printf("Decoding instruction number %d with code : %d\n",DECODE_INST , instruction);
+            pipeline[1].dest_reg = decodedArray[1];
             printf("Pipeline decode stage dest_reg set to: %d\n", pipeline[1].dest_reg);
         }
     }
@@ -292,34 +298,35 @@ void decode(int instruction)
         {
             if (DECODE_INST <= num_instructions)
             {
-                pipeline[1].dest_reg = result_reg; 
-                printf("Pipeline decode stage dest_reg set to: %d\n", pipeline[1].dest_reg);
+                pipeline[1].dest_reg = decodedArray[1]; 
+                printf("Decoding instruction number %d with code : %d\n",DECODE_INST , instruction);
 
-                printf("Decoding instruction number: %d\n",DECODE_INST);
+                printf("Pipeline decode stage dest_reg set to: %d\n", pipeline[1].dest_reg);
                 DECODE_INST++;
             }
             Excute_Flag = 1;
         }
     }
-    shift_pipeline();
+    // shift_pipeline();
 
 }
 
 int fetch()
 {
+
     if(pc < num_instructions && (clk % 2 == 1)){
         int instruction = Memory_Array[pc];
         printf("Fetching instruction number %d with code: %d\n", FETCH_INST + 1, instruction);        
         FETCH_INST++;
         pc++;
-        printf("PC in fetch: %d & FETCH NUM: %d\n",pc , FETCH_INST);
-        return instruction;
+        // printf("PC in fetch: %d & FETCH NUM: %d\n",pc , FETCH_INST);
+        pipeline[0].Fetch_Inst = instruction;
     }
-    else
-    {
-        // printf("End of program reached.\n");
-        return -1; // End of program
-    }
+    // else
+    // {
+    //     // printf("End of program reached.\n");
+    //     return -1; // End of program
+    // }
     
     
 }
@@ -618,14 +625,14 @@ int main()
         memory(decodedArray,FINAL_RESULT);
     
         execute();
-        decode(INST);
+        decode();
         
-        INST = fetch(); 
+        fetch(); 
         // if (clk != 1)
         // {
         //     shift_pipeline();
         // } 
-        // shift_pipeline();
+        shift_pipeline();
         // printf("Fetch Count: %d\n",FETCH_INST);
         //printf("INST: %d\n\n",INST);
         clk++;
@@ -639,14 +646,14 @@ int main()
     // for (int i = 0; i < 32; i++) {
     //     registerFile[i] = 0;
     // }
-    // printf("[");
-    // for (int i = 0; i < 32; i++) {
-    //     printf("%d", registerFile[i]);
-    //     if (i < 32 - 1) {
-    //         printf(", ");
-    //     }
-    // }
-    // printf("]\n");
+    printf("[");
+    for (int i = 0; i < 32; i++) {
+        printf("%d", registerFile[i]);
+        if (i < 32 - 1) {
+            printf(", ");
+        }
+    }
+    printf("]\n");
     
     // // printf("[");
     // for (int i = 0; i < sizeof(array); i++) {

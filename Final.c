@@ -3,8 +3,9 @@
 #include <string.h>
 #include <ctype.h>
 
-// #define Memory 2048 // Size of the Full Memory 
-// #define Data_Start 1024 // Start of the data
+#define RED "\033[1;31m"
+#define RESET "\033[0m"
+#define BLUE "\033[1;34m"
 #define PIPELINE_DEPTH 5 // Number of pipeline stages
 
 typedef struct {
@@ -112,10 +113,14 @@ void writeback()
         First_Reg = pipeline[4].dest_reg;
         // printf("reg: %d\n",First_Reg);
         result = pipeline[4].result;
+        int temp_opcode = pipeline[4].opcode;
         if (First_Reg > 0 && First_Reg < 32) 
         {
-            registerFile[First_Reg] = result;
-            printf("Register Number: %d is changed to %d\n",First_Reg,result);                            
+            if ((temp_opcode != 10) && (temp_opcode != 11) && (temp_opcode != 4) && (temp_opcode != 7))
+            {
+                registerFile[First_Reg] = result;
+                printf(BLUE "Register Number %d is changed to %d\n" RESET, First_Reg, result);   
+            }          
         } 
         else 
         {
@@ -138,18 +143,23 @@ void memory() {
             int temp_opcode = pipeline[3].opcode;
             int temp_result = pipeline[3].result;
             int temp_reg = pipeline[3].dest_reg;
-            printf("Opcode in memory: %d\n",temp_opcode);
+
             if (temp_opcode != -1) {
                 if (temp_opcode == 10) {
-                    printf("MEM: dest_reg: %d .... result: %d\n ",temp_reg,Memory_Array[temp_result]);
+                    printf("Memory Access At Instruction Number: %d\n", MEM_INST);
+                    printf(BLUE "Memory at index %d is being read from and written to Register %d with value: %d\n" RESET,temp_result,temp_reg,Memory_Array[temp_result]);
                     registerFile[temp_reg] = Memory_Array[temp_result];
                 } else if (temp_opcode == 11) {
                     Memory_Array[temp_result] = registerFile[temp_reg];
-                    printf("MEM at index %d is changed to: %d\n ",temp_result,registerFile[temp_reg]);
+                    printf("Memory Access At Instruction Number: %d\n", MEM_INST);
+                    printf(BLUE "Storing in Memory at index %d with value %d from register %d\n" RESET,temp_result,registerFile[temp_reg],temp_reg);
+                }
+                else
+                {
+                    printf(RED "Memory Access At Instruction Number %d with no effect\n" RESET, MEM_INST);    
                 }
             }
             if (MEM_INST <= num_instructions) {
-                printf("Memory Access At Instruction Number: %d\n", MEM_INST);
                 MEM_INST++;
                 WB_FLAG = 1;
             }
@@ -211,8 +221,13 @@ void execute()
         
             if (EXCUTE_INST <= num_instructions)
             {
-                printf("excuting instruction number: %d\n", EXCUTE_INST);
+                printf("Excuting instruction number: %d\n", EXCUTE_INST);
             }
+            else
+            {
+                printf(RED "Finished Excuting All Instructions\n" RESET);
+            }
+            
             FINAL_RESULT = result;
             if (pipeline[2].Fetch_Inst != -1) 
             {
@@ -220,7 +235,6 @@ void execute()
                 // printf("excute result in excute: %d\n",pipeline[2].result);
                 result_reg = pipeline[2].dest_reg; 
                 mem_opcode = pipeline[2].opcode;
-                printf("excute opcode: %d\n",pipeline[2].opcode);
 
                 // printf("excute destination register in excute: %d\n",pipeline[2].dest_reg);
             }
@@ -232,14 +246,17 @@ void execute()
         {
             if (EXCUTE_INST <= num_instructions)
             {
-                printf("excuting instruction number: %d\n", EXCUTE_INST);
+                printf("Excuting instruction number: %d\n", EXCUTE_INST);
                 EXCUTE_INST++;
                 MEM_FLAG = 1;
                 pipeline[2].result = FINAL_RESULT;
                 // printf("excute result in excute: %d\n",pipeline[2].result);
                 pipeline[2].dest_reg = result_reg;
                 pipeline[2].opcode = mem_opcode;
-                printf("excute opcode: %d\n",pipeline[2].opcode);
+            }
+            else
+            {
+                printf(RED "Finished Excuting All Instructions\n" RESET);
             }
         }
     }
@@ -304,11 +321,13 @@ void decode()
         decodedArray = OutgoingArray;
         if (instruction != 0 && (DECODE_INST <= num_instructions)) // deh kanet moshkela el fe clock cycle 16
         {
-            printf("Decoding instruction number %d with code : %d\n",DECODE_INST , instruction);
+            printf(BLUE "Decoding instruction number %d with code: %d\n" RESET,DECODE_INST , instruction);
             pipeline[1].dest_reg = decodedArray[1];
             pipeline[1].opcode = decodedArray[0];
-            // mem_opcode = decodedArray[0];
-            // printf("Pipeline decode stage opcode set to: %d\n", pipeline[1].opcode);
+        }
+        else
+        {
+            printf(RED "Finished Decoding All Instructions\n" RESET);
         }
     }
     else 
@@ -318,30 +337,35 @@ void decode()
             if (DECODE_INST <= num_instructions)
             {
                 pipeline[1].dest_reg = decodedArray[1]; 
-                printf("Decoding instruction number %d with code : %d\n",DECODE_INST , instruction);
+                printf(BLUE "Decoding instruction number %d with code : %d\n" RESET,DECODE_INST , instruction);
                 pipeline[1].opcode = decodedArray[0];
-
-                // printf("Pipeline decode stage opcode set to: %d\n", pipeline[1].opcode);
                 DECODE_INST++;
+            }
+            else 
+            {
+                printf(RED "Finished Decoding All Instructions\n" RED);
             }
             Excute_Flag = 1;
         }
     }
-    // shift_pipeline();
-
 }
 
-int fetch()
+void fetch()
 {
 
     if(pc < num_instructions && (clk % 2 == 1)){
         int instruction = Memory_Array[pc];
-        printf("Fetching instruction number %d with code: %d\n", FETCH_INST + 1, instruction);        
+        printf(BLUE "Fetching instruction number %d from the Memory with value: %d\n" RESET, FETCH_INST + 1, instruction);        
         FETCH_INST++;
         pc++;
         // printf("PC in fetch: %d & FETCH NUM: %d\n",pc , FETCH_INST);
         pipeline[0].Fetch_Inst = instruction;
     }
+    else if (pc >= num_instructions)
+    {
+        printf(RED "Finished Fetching All Instructions\n" RESET);
+    }
+    
     // else
     // {
     //     // printf("End of program reached.\n");
@@ -645,25 +669,13 @@ int main()
         int INST;
         printf("Clock Cycle: %d\n\n", clk);
         
-
         writeback();
-        // WB_NUM++;
-
-        memory(decodedArray,FINAL_RESULT);
-    
+        memory();
         execute();
         decode();
-        
         fetch(); 
-        // if (clk != 1)
-        // {
-        //     shift_pipeline();
-        // } 
         shift_pipeline();
-        // printf("Fetch Count: %d\n",FETCH_INST);
-        //printf("INST: %d\n\n",INST);
         clk++;
-        
     }
     
     // int temppp = Memory_Array[1025];
